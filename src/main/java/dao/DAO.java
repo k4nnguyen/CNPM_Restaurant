@@ -6,10 +6,7 @@ package dao;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-/**
- *
- * @author annguyen
- */
+
 public class DAO {
     public static Connection con;
 

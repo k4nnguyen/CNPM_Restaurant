@@ -1,46 +1,42 @@
-package view.staff;
+package view.manager;
 
-import dao.TableDAO;
-import model.*;
+import model.User;
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
 
 /**
- * Màn hình chính của Nhân viên phục vụ.
- * Cung cấp các chức năng: Thanh toán cho bàn.
+ * Màn hình chính của Quản lý nhà hàng.
+ * Cung cấp các chức năng: Xem thống kê báo cáo.
  */
-public class StaffHomeFrm extends JFrame implements ActionListener {
+public class ManagerHomeFrm extends JFrame implements ActionListener {
     private User user;
-    private JButton btnPayTable;
+    private JButton btnViewStat;
     private JButton btnLogout;
     private JLabel lblWelcome;
 
-    public StaffHomeFrm(User user) {
-        super("Trang chủ - Nhân viên phục vụ");
+    public ManagerHomeFrm(User user) {
+        super("Trang chủ - Quản lý nhà hàng");
         this.user = user;
         initComponents();
+        setSize(520, 380);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
     private void initComponents() {
-        setSize(500, 350);
         setLayout(new BorderLayout(10, 10));
 
         // Header
         JPanel pnlHeader = new JPanel(new BorderLayout());
-        pnlHeader.setBackground(new Color(41, 128, 185));
+        pnlHeader.setBackground(new Color(142, 68, 173));
         pnlHeader.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
 
-        lblWelcome = new JLabel("Xin chào, " + user.getFullName() + " | Vai trò: Nhân viên");
+        lblWelcome = new JLabel("Xin chào, " + user.getFullName() + " | Vai trò: Quản lý");
         lblWelcome.setForeground(Color.WHITE);
         lblWelcome.setFont(new Font("Segoe UI", Font.BOLD, 14));
         pnlHeader.add(lblWelcome, BorderLayout.WEST);
 
-        // Nút Đăng xuất
         btnLogout = new JButton("Đăng xuất");
         btnLogout.addActionListener(this);
         btnLogout.setFocusPainted(false);
@@ -48,28 +44,28 @@ public class StaffHomeFrm extends JFrame implements ActionListener {
 
         // Panel chức năng
         JPanel pnlMenu = new JPanel(new GridBagLayout());
-        pnlMenu.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
+        pnlMenu.setBorder(BorderFactory.createEmptyBorder(30, 50, 30, 50));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.gridwidth = GridBagConstraints.REMAINDER;
 
-        // Nút Thanh toán cho bàn
-        btnPayTable = new JButton("💳  Thanh toán cho bàn");
-        btnPayTable.setFont(new Font("Segoe UI", Font.BOLD, 15));
-        btnPayTable.setPreferredSize(new Dimension(300, 55));
-        btnPayTable.setBackground(new Color(39, 174, 96));
-        btnPayTable.setForeground(Color.WHITE);
-        btnPayTable.setFocusPainted(false);
-        btnPayTable.addActionListener(this);
-        pnlMenu.add(btnPayTable, gbc);
+        // Nút xem thống kê
+        btnViewStat = new JButton("📊  Xem thống kê báo cáo");
+        btnViewStat.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        btnViewStat.setPreferredSize(new Dimension(300, 55));
+        btnViewStat.setBackground(new Color(142, 68, 173));
+        btnViewStat.setForeground(Color.WHITE);
+        btnViewStat.setFocusPainted(false);
+        btnViewStat.addActionListener(this);
+        pnlMenu.add(btnViewStat, gbc);
 
         add(pnlHeader, BorderLayout.NORTH);
         add(pnlMenu, BorderLayout.CENTER);
 
         // Footer
-        JLabel lblFooter = new JLabel("Hệ thống quản lý nhà hàng - Module Nhân viên", JLabel.CENTER);
+        JLabel lblFooter = new JLabel("Hệ thống quản lý nhà hàng - Module Quản lý", JLabel.CENTER);
         lblFooter.setFont(new Font("Segoe UI", Font.ITALIC, 11));
         lblFooter.setBorder(BorderFactory.createEmptyBorder(5, 0, 10, 0));
         add(lblFooter, BorderLayout.SOUTH);
@@ -77,15 +73,14 @@ public class StaffHomeFrm extends JFrame implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource().equals(btnPayTable)) {
-            new SelectTableToPayFrm(user).setVisible(true);
+        if (e.getSource().equals(btnViewStat)) {
+            new SelectStatFrm(user).setVisible(true);
             this.setVisible(false);
         } else if (e.getSource().equals(btnLogout)) {
             int confirm = JOptionPane.showConfirmDialog(this,
                     "Bạn có chắc muốn đăng xuất?", "Xác nhận", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
                 this.dispose();
-                // Quay về màn hình đăng nhập nếu có
             }
         }
     }

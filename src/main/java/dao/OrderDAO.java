@@ -1,68 +1,128 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package dao;
 
 import model.*;
 import java.sql.*;
+import java.util.ArrayList;
+
 /**
- *
- * @author annguyen
+ * DAO xử lý truy vấn CSDL cho thực thể Order và OrderItem.
+ * Cung cấp: lấy chi tiết đơn đặt món theo bàn.
  */
 public class OrderDAO extends DAO {
-    public OrderDAO() { super(); }
 
-    // Lưu hóa đơn gọi món
-    public boolean addOrder(Order o) {
-        boolean result = false;
-        // Câu lệnh SQL thêm vào bảng cha (tblOrder)
-        String sqlOrder = "INSERT INTO tblOrder(orderTime, totalAmount, status, tblUserId, tblTableId) VALUES(?,?,?,?,?)";
-        // Câu lệnh SQL thêm vào bảng con (tblOrderDish)
-        String sqlOrderDish = "INSERT INTO tblOrderDish(quantity, currentPrice, tblOrderId, tblDishId) VALUES(?,?,?,?)";
-        
+    public OrderDAO() {
+        super();
+    }
+
+    /**
+     * Lấy chi tiết đơn đặt món chưa thanh toán của một bàn.
+     * Bao gồm cả danh sách OrderItem và thông tin Dish tương ứng.
+     *
+     * @param tableId ID của bàn cần lấy thông tin order.
+     * @return Đối tượng Order đầy đủ, hoặc null nếu không tìm thấy.
+     */
+    public Order getOrderDetail(int tableId) {
+        Order order = null;
+        String sqlOrder = "SELECT * FROM tblOrder WHERE tblTableId = ? AND status = N'Chưa thanh toán'";
+        String sqlOrderItem = "SELECT oi.*, d.dishCode, d.name, d.category, d.price "
+                + "FROM tblOrderItem oi "
+                + "JOIN tblDish d ON oi.tblDishId = d.id "
+                + "WHERE oi.tblOrderId = ?";
         try {
-            con.setAutoCommit(false); // Bắt đầu Transaction
-            
-            // 1. Insert Order
-            PreparedStatement ps1 = con.prepareStatement(sqlOrder, Statement.RETURN_GENERATED_KEYS);
-            // Dùng Timestamp để lấy được cả ngày và giờ gọi món
-            ps1.setTimestamp(1, new java.sql.Timestamp(o.getOrderTime().getTime()));
-            ps1.setDouble(2, o.getTotalAmount());
-            ps1.setString(3, Order.STATUS_UNPAID); // Mặc định là "Chưa thanh toán" khi mới gọi món
-            ps1.setInt(4, o.getUser().getId());
-            ps1.setInt(5, o.getTable().getId());
-            ps1.executeUpdate();
-            
-            // Lấy ID tự tăng của bảng tblOrder vừa sinh ra
-            ResultSet generatedKeys = ps1.getGeneratedKeys();
-            if (generatedKeys.next()) {
-                o.setId(generatedKeys.getInt(1));
-                
-                // 2. Insert các OrderDish (Chi tiết món ăn)
-                PreparedStatement ps2 = con.prepareStatement(sqlOrderDish);
-                for (OrderDish od : o.getOrderDishes()) {
-                    ps2.setInt(1, od.getQuantity());
-                    ps2.setDouble(2, od.getCurrentPrice()); // Lưu giá tại thời điểm gọi để không bị ảnh hưởng nếu sau này đổi giá menu
-                    ps2.setInt(3, o.getId());
-                    ps2.setInt(4, od.getDish().getId());
-                    ps2.executeUpdate();
+            PreparedStatement psOrder = con.prepareStatement(sqlOrder);
+            psOrder.setInt(1, tableId);
+            ResultSet rsOrder = psOrder.executeQuery();
+            if (rsOrder.next()) {
+                order = new Order();
+                order.setId(rsOrder.getInt("id"));
+                order.setOrderTime(rsOrder.getTimestamp("orderTime"));
+                order.setTotalAmount(rsOrder.getDouble("totalAmount"));
+                order.setStatus(rsOrder.getString("status"));
+
+                Table table = new Table();
+                table.setId(tableId);
+                order.setTable(table);
+
+                // Tải danh sách OrderItem
+                ArrayList<OrderItem> items = new ArrayList<>();
+                PreparedStatement psItem = con.prepareStatement(sqlOrderItem);
+                psItem.setInt(1, order.getId());
+                ResultSet rsItem = psItem.executeQuery();
+                while (rsItem.next()) {
+                    OrderItem item = new OrderItem();
+                    item.setId(rsItem.getInt("id"));
+                    item.setQuantity(rsItem.getInt("quantity"));
+                    item.setUnitPrice(rsItem.getDouble("unitPrice"));
+                    item.setTemporaryAmount(item.getQuantity() * item.getUnitPrice());
+
+                    Dish dish = new Dish();
+                    dish.setId(rsItem.getInt("tblDishId"));
+                    dish.setDishCode(rsItem.getString("dishCode"));
+                    dish.setName(rsItem.getString("name"));
+                    dish.setCategory(rsItem.getString("category"));
+                    dish.setPrice(rsItem.getDouble("price"));
+                    item.setDish(dish);
+                    items.add(item);
                 }
+                order.setOrderItems(items);
             }
-            
-            con.commit(); // Hoàn tất Transaction
-            result = true;
-        } catch (SQLException e) {
-            try {
-                con.rollback(); // Hoàn tác (Rollback) nếu có bất kỳ lỗi nào xảy ra
-            } catch (SQLException ex) { 
-            }
-        } finally {
-            try {
-                con.setAutoCommit(true); // Trả lại trạng thái auto commit mặc định cho connection
-            } catch (SQLException ex) { 
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return result;
+        return order;
+    }
+
+    /**
+     * Lấy danh sách tất cả các đơn đặt món chưa thanh toán.
+     *
+     * @return Danh sách các Order chưa thanh toán.
+     */
+    public ArrayList<Order> getAllUnpaidOrders() {
+        ArrayList<Order> list = new ArrayList<>();
+        String sql = "SELECT o.*, t.tableCode, t.name AS tableName "
+                + "FROM tblOrder o JOIN tblTable t ON o.tblTableId = t.id "
+                + "WHERE o.status = N'Chưa thanh toán' ORDER BY o.orderTime";
+        try {
+            PreparedStatement ps = con.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Order order = new Order();
+                order.setId(rs.getInt("id"));
+                order.setOrderTime(rs.getTimestamp("orderTime"));
+                order.setTotalAmount(rs.getDouble("totalAmount"));
+                order.setStatus(rs.getString("status"));
+
+                Table table = new Table();
+                table.setId(rs.getInt("tblTableId"));
+                table.setTableCode(rs.getString("tableCode"));
+                table.setName(rs.getString("tableName"));
+                order.setTable(table);
+                list.add(order);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    /**
+     * Cập nhật trạng thái của đơn đặt món.
+     *
+     * @param orderId ID đơn đặt món.
+     * @param status  Trạng thái mới.
+     * @return true nếu cập nhật thành công.
+     */
+    public boolean updateOrderStatus(int orderId, String status) {
+        String sql = "UPDATE tblOrder SET status = ? WHERE id = ?";
+        try {
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setString(1, status);
+            ps.setInt(2, orderId);
+            ps.executeUpdate();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 }
