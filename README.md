@@ -1,6 +1,6 @@
 # Restaurant Module
 
-README này dùng cho cả nhóm để clone project, tạo CSDL, chạy app, và hiểu rõ những thay đổi đã được tích hợp thêm vào project gốc.
+README này dùng để clone project, tạo CSDL, chạy app, và hiểu rõ những thay đổi đã được tích hợp thêm vào project gốc.
 
 ## 1. Mục tiêu hiện tại
 
@@ -106,7 +106,7 @@ ALTER ROLE db_owner ADD MEMBER restaurant_app;
 GO
 ```
 
-Nếu nhóm không muốn dùng `restaurant_app`, có thể giữ login SQL khác và override trong lúc chạy app. Cách override nằm ở mục 9.
+Nếu không muốn dùng `restaurant_app`, có thể giữ login SQL khác và override trong lúc chạy app. Cách override nằm ở mục 9.
 
 ## 6. Tạo bảng và seed dữ liệu
 
