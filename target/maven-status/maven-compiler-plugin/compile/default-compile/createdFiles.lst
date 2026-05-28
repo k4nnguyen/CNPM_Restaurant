@@ -33,6 +33,7 @@ model\Order.class
 view\staff\SearchClientFrm.class
 view\staff\SearchFreeTableFrm.class
 view\staff\ConfirmOrderFrm$1.class
+view\staff\EditBookingFrm$1.class
 model\Table.class
 view\staff\OrderFrm$1.class
 dao\ClientDAO.class

@@ -128,18 +128,25 @@ public class SearchFreeTableFrm extends JFrame implements ActionListener {
                     return;
                 }
                 
-                // GIẢ LẬP GỌI DAO ĐỂ TEST GIAO DIỆN
-                listTable = new ArrayList<>();
-                Table t1 = new Table(); t1.setId(1); t1.setTableCode("T001"); t1.setCapacity(4); t1.setStatus("Trống");
-                Table t2 = new Table(); t2.setId(2); t2.setTableCode("T002"); t2.setCapacity(2); t2.setStatus("Trống");
-                listTable.add(t1); listTable.add(t2);
+                // --- KẾT NỐI DAO TẠI ĐÂY ---
+                // Format lại ngày từ dd/MM/yyyy (UI) sang yyyy-MM-dd (SQL Server)
+                Date inputDate = new SimpleDateFormat("dd/MM/yyyy HH:mm").parse(txtDatetime.getText().trim());
+                String dbDate = new SimpleDateFormat("yyyy-MM-dd").format(inputDate);
+                String dbTime = new SimpleDateFormat("HH:mm").format(inputDate);
+
+                dao.TableDAO dao = new dao.TableDAO();
+                listTable = dao.searchFreeTable(dbDate, dbTime, qty);
 
                 tableModel.setRowCount(0); 
-                for (Table t : listTable) {
-                    tableModel.addRow(new Object[]{t.getId(), t.getTableCode(), t.getCapacity(), t.getStatus()});
+                if (listTable != null && !listTable.isEmpty()) {
+                    for (Table t : listTable) {
+                        tableModel.addRow(new Object[]{t.getId(), t.getTableCode(), t.getCapacity(), t.getStatus()});
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(this, "Không có bàn nào trống phù hợp!");
                 }
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Số lượng khách phải là chữ số!");
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi định dạng!");
             }
         }
     }
@@ -152,21 +159,35 @@ public class SearchFreeTableFrm extends JFrame implements ActionListener {
             return;
         }
 
+        int requiredQty = Integer.parseInt(txtQuantity.getText().trim());
+        int totalCapacity = 0; // Biến tính tổng sức chứa các bàn đã chọn
+
         Booking tempBooking = new Booking();
         // Tách chuỗi theo khoảng trắng
         String[] parts = txtDatetime.getText().trim().split(" ");
         try {
-            tempBooking.setBookDate(new SimpleDateFormat("dd/MM/yyyy").parse(parts[0]));
+            tempBooking.setBookDate(new java.text.SimpleDateFormat("dd/MM/yyyy").parse(parts[0]));
             tempBooking.setBookTime(parts.length > 1 ? parts[1] : "");
         } catch (Exception ex) {}
-        tempBooking.setQuantity(Integer.parseInt(txtQuantity.getText().trim()));
+        tempBooking.setQuantity(requiredQty);
         
-        // Thêm tất cả các bàn được tô đậm vào Booking
+        // Lặp qua các bàn được chọn để cộng dồn sức chứa và thêm vào Booking
         for (int i = 0; i < selectedRows.length; i++) {
             Table selectedTable = listTable.get(selectedRows[i]);
+            totalCapacity += selectedTable.getCapacity(); // Cộng dồn
+            
             BookedTable bt = new BookedTable();
             bt.setTable(selectedTable);
             tempBooking.addBookedTable(bt);
+        }
+        
+        // KIỂM TRA ĐIỀU KIỆN GHÉP BÀN
+        if (totalCapacity < requiredQty) {
+            JOptionPane.showMessageDialog(this, 
+                "Tổng sức chứa của các bàn đã chọn (" + totalCapacity + ") không đủ cho " + requiredQty + " khách!\n" +
+                "Vui lòng giữ phím Ctrl và click chọn thêm bàn để ghép."
+            );
+            return; // Chặn lại, không cho sang trang tiếp theo
         }
         
         new SearchClientFrm(user, tempBooking).setVisible(true);

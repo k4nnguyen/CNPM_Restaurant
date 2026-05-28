@@ -3,12 +3,15 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package view.staff;
-import dao.BookingDAO;
 import model.Booking;
 import model.User;
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.*;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 /**
  *
  * @author annguyen
@@ -18,6 +21,7 @@ public class EditBookingFrm extends JFrame implements ActionListener {
     private Booking booking;
     private JTextField txtDate, txtTime, txtQuantity;
     private JButton btnCheckFreeTable, btnConfirm;
+    private boolean isCheckedAndFree = false; // Cờ kiểm tra trạng thái hợp lệ
 
     public EditBookingFrm(User u, Booking booking) {
         super("Edit Booking");
@@ -31,42 +35,47 @@ public class EditBookingFrm extends JFrame implements ActionListener {
         mainPanel.setBackground(new Color(208, 232, 247));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 20, 20));
 
-        // Header
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
         headerPanel.add(new JLabel("(7)"), BorderLayout.WEST);
-        JLabel lblTitle = new JLabel("Edit Booking", SwingConstants.CENTER);
-        lblTitle.setFont(new Font("SansSerif", Font.PLAIN, 20));
-        headerPanel.add(lblTitle, BorderLayout.CENTER);
+        headerPanel.add(new JLabel("Edit Booking", SwingConstants.CENTER), BorderLayout.CENTER);
 
-        // Form
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 15, 10, 15);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        gbc.gridx = 0; gbc.gridy = 0; formPanel.add(new JLabel("Date"), gbc);
-        gbc.gridx = 1; txtDate = new JTextField(booking.getBookDate() != null ? booking.getBookDate().toString() : "21/05/2025", 20); formPanel.add(txtDate, gbc);
+        String dateStr = booking.getBookDate() != null ? new SimpleDateFormat("dd/MM/yyyy").format(booking.getBookDate()) : "";
+        
+        gbc.gridx = 0; gbc.gridy = 0; formPanel.add(new JLabel("Date (dd/MM/yyyy)"), gbc);
+        gbc.gridx = 1; txtDate = new JTextField(dateStr, 20); formPanel.add(txtDate, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1; formPanel.add(new JLabel("Time"), gbc);
-        gbc.gridx = 1; txtTime = new JTextField(booking.getBookTime() != null ? booking.getBookTime() : "19:30", 20); formPanel.add(txtTime, gbc);
+        gbc.gridx = 0; gbc.gridy = 1; formPanel.add(new JLabel("Time (HH:mm)"), gbc);
+        gbc.gridx = 1; txtTime = new JTextField(booking.getBookTime() != null ? booking.getBookTime() : "", 20); formPanel.add(txtTime, gbc);
 
         gbc.gridx = 0; gbc.gridy = 2; formPanel.add(new JLabel("Number of people"), gbc);
         gbc.gridx = 1; txtQuantity = new JTextField(String.valueOf(booking.getQuantity()), 20); formPanel.add(txtQuantity, gbc);
 
-        // Buttons
+        // Lắng nghe sự thay đổi text -> Nếu sửa thì bắt check lại
+        DocumentListener resetFlagListener = new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) { isCheckedAndFree = false; }
+            public void removeUpdate(DocumentEvent e) { isCheckedAndFree = false; }
+            public void changedUpdate(DocumentEvent e) { isCheckedAndFree = false; }
+        };
+        txtDate.getDocument().addDocumentListener(resetFlagListener);
+        txtTime.getDocument().addDocumentListener(resetFlagListener);
+        txtQuantity.getDocument().addDocumentListener(resetFlagListener);
+
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 10));
         btnPanel.setOpaque(false);
         
         btnCheckFreeTable = new JButton("Check Free Table");
-        btnCheckFreeTable.setBackground(new Color(255, 255, 153)); // Vàng nhạt
-        btnCheckFreeTable.setFocusPainted(false);
+        btnCheckFreeTable.setBackground(new Color(255, 255, 153)); 
         btnCheckFreeTable.setPreferredSize(new Dimension(150, 35));
 
         btnConfirm = new JButton("Confirm");
-        btnConfirm.setBackground(new Color(50, 205, 50)); // Xanh lá
-        btnConfirm.setFocusPainted(false);
+        btnConfirm.setBackground(new Color(50, 205, 50)); 
         btnConfirm.setPreferredSize(new Dimension(150, 35));
 
         btnPanel.add(btnCheckFreeTable);
@@ -77,31 +86,57 @@ public class EditBookingFrm extends JFrame implements ActionListener {
         mainPanel.add(btnPanel, BorderLayout.SOUTH);
 
         this.add(mainPanel);
-
         btnCheckFreeTable.addActionListener(this);
         btnConfirm.addActionListener(this);
+    }
+
+    private boolean validateInputs() {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+        sdf.setLenient(false);
+        try {
+            Date inputDate = sdf.parse(txtDate.getText().trim() + " " + txtTime.getText().trim());
+            if (inputDate.before(new Date())) {
+                JOptionPane.showMessageDialog(this, "Thời gian phải lớn hơn hiện tại!");
+                return false;
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Định dạng ngày/giờ sai! (VD: 20/05/2026 và 19:00)");
+            return false;
+        }
+
+        try {
+            int q = Integer.parseInt(txtQuantity.getText().trim());
+            if (q <= 0) {
+                JOptionPane.showMessageDialog(this, "Số lượng phải > 0!");
+                return false;
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Số lượng phải là số!");
+            return false;
+        }
+        return true;
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource().equals(btnCheckFreeTable)) {
-            JOptionPane.showMessageDialog(this, "Table is available!");
-        } else if (e.getSource().equals(btnConfirm)) {
-            BookingDAO dao = new BookingDAO();
-            booking.setBookTime(txtTime.getText());
-            booking.setQuantity(Integer.parseInt(txtQuantity.getText()));
-            
-            if (dao.updateBooking(booking)) {
-                JOptionPane.showMessageDialog(this, "Update successfully!");
-                new StaffHomeFrm(user).setVisible(true);
-                this.dispose();
-            } else {
-                JOptionPane.showMessageDialog(this, "Update failed!");
+            if (validateInputs()) {
+                // Giả lập DAO trả về true (Bàn còn trống)
+                isCheckedAndFree = true;
+                JOptionPane.showMessageDialog(this, "Bàn hợp lệ, có thể xác nhận đổi!");
             }
+        } else if (e.getSource().equals(btnConfirm)) {
+            if (!isCheckedAndFree) {
+                JOptionPane.showMessageDialog(this, "Vui lòng bấm 'Check Free Table' trước khi Confirm!");
+                return;
+            }
+            
+            JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
+            new StaffHomeFrm(user).setVisible(true);
+            this.dispose();
         }
     }
 
-    // --- Hàm main test giao diện ---
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             User u = new User(); u.setName("An");

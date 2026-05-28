@@ -12,31 +12,48 @@ import java.util.ArrayList;
  * @author annguyen
  */
 public class ClientDAO extends DAO {
-    public ClientDAO() { 
-        super(); 
+    public ClientDAO() {
+        super();
     }
 
-    // Tìm kiếm khách hàng theo từ khóa (Tên hoặc Số điện thoại)
-    public ArrayList<Client> searchClient(String keyword) {
+    // Cập nhật hàm searchClient nhận 2 tham số
+    public ArrayList<Client> searchClient(String name, String phone) {
         ArrayList<Client> list = new ArrayList<>();
-        // Tìm tương đối (LIKE) trên cả 2 trường name và phone
-        String sql = "SELECT * FROM tblClient WHERE name LIKE ? OR phone LIKE ?";
+        
+        // Dùng mẹo 1=1 để dễ dàng nối thêm các điều kiện phía sau bằng chữ AND
+        String sql = "SELECT * FROM tblClient WHERE 1=1";
+        
+        if (name != null && !name.isEmpty()) {
+            sql += " AND name LIKE ?"; // Tìm gần đúng theo tên
+        }
+        if (phone != null && !phone.isEmpty()) {
+            sql += " AND phone LIKE ?"; // Tìm gần đúng theo sđt
+        }
+
         try {
             PreparedStatement ps = con.prepareStatement(sql);
-            ps.setString(1, "%" + keyword + "%");
-            ps.setString(2, "%" + keyword + "%");
-            ResultSet rs = ps.executeQuery();
             
+            // Đổ dữ liệu vào các dấu chấm hỏi (?) một cách linh hoạt
+            int paramIndex = 1;
+            if (name != null && !name.isEmpty()) {
+                ps.setString(paramIndex++, "%" + name + "%");
+            }
+            if (phone != null && !phone.isEmpty()) {
+                ps.setString(paramIndex++, "%" + phone + "%");
+            }
+
+            ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 Client c = new Client();
-                c.setId(rs.getInt("id"));
+                c.setId(rs.getInt("ID"));
                 c.setName(rs.getString("name"));
                 c.setPhone(rs.getString("phone"));
                 c.setEmail(rs.getString("email"));
                 c.setAddress(rs.getString("address"));
                 list.add(c);
             }
-        } catch (SQLException e) { 
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
         return list;
     }

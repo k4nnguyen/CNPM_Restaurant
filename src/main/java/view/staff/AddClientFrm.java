@@ -98,11 +98,15 @@ public class AddClientFrm extends JFrame implements ActionListener {
             Client c = new Client();
             c.setName(name); c.setPhone(phone); c.setEmail(email); c.setAddress(address);
             
-            // BỎ QUA DAO THEO YÊU CẦU - Coi như lưu thành công
-            tmpBooking.setClient(c);
-            JOptionPane.showMessageDialog(this, "Thêm khách hàng thành công!");
-            new ConfirmBookingFrm(user, tmpBooking).setVisible(true);
-            this.dispose();
+            dao.ClientDAO dao = new dao.ClientDAO();
+            if (dao.addClient(c)) {
+                tmpBooking.setClient(c); // c lúc này đã có ID từ CSDL trả về
+                JOptionPane.showMessageDialog(this, "Thêm khách hàng thành công!");
+                new ConfirmBookingFrm(user, tmpBooking).setVisible(true);
+                this.dispose();
+            } else {
+                JOptionPane.showMessageDialog(this, "Lỗi! Số điện thoại có thể đã tồn tại.");
+            }
         }
     }
     // --- Hàm main để test giao diện độc lập ---

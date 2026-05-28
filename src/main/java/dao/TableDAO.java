@@ -12,6 +12,7 @@ import java.util.ArrayList;
  * @author annguyen
  */
 public class TableDAO extends DAO {
+    
     public TableDAO() { 
         super(); 
     }
@@ -19,15 +20,16 @@ public class TableDAO extends DAO {
     // 1. Tìm kiếm bàn trống (Module 1: Đặt bàn)
     public ArrayList<Table> searchFreeTable(String date, String time, int quantity) {
         ArrayList<Table> list = new ArrayList<>();
-        String sql = "SELECT * FROM tblTable WHERE capacity >= ? AND id NOT IN (" +
+        // Cập nhật SQL: Lọc trực tiếp status = 'Trống' và kiểm tra không bị trùng lịch đặt trước
+        String sql = "SELECT * FROM tblTable WHERE status = N'Trống' AND id NOT IN (" +
                      "SELECT tblTableId FROM tblBookedTable bt " +
                      "JOIN tblBooking b ON bt.tblBookingId = b.id " +
-                     "WHERE b.bookDate = ? AND b.bookTime = ? AND b.status = 'Chờ nhận bàn')";
+                     "WHERE b.bookDate = ? AND b.bookTime = ? AND b.status IN (N'Pending', N'Confirmed'))";
         try {
             PreparedStatement ps = con.prepareStatement(sql);
-            ps.setInt(1, quantity);
-            ps.setString(2, date);
-            ps.setString(3, time);
+            // Vì đã bỏ capacity, ta chỉ truyền tham số ngày và giờ (Index 1 và 2)
+            ps.setString(1, date);
+            ps.setString(2, time);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 Table t = new Table();
@@ -39,6 +41,7 @@ public class TableDAO extends DAO {
                 list.add(t);
             }
         } catch (SQLException e) {             
+            e.printStackTrace(); 
         }
         return list;
     }
@@ -50,7 +53,7 @@ public class TableDAO extends DAO {
         // Nếu count > 0 nghĩa là bàn đã bị kẹt lịch -> false.
         String sql = "SELECT COUNT(*) AS count FROM tblBookedTable bt " +
                      "JOIN tblBooking b ON bt.tblBookingId = b.id " +
-                     "WHERE bt.tblTableId = ? AND b.bookDate = ? AND b.bookTime = ? AND b.status = 'Chờ nhận bàn'";
+                     "WHERE bt.tblTableId = ? AND b.bookDate = ? AND b.bookTime = ? AND b.status IN (N'Pending', N'Confirmed')";
         try {
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setInt(1, tableId);
@@ -65,6 +68,7 @@ public class TableDAO extends DAO {
                 }
             }
         } catch (SQLException e) {
+            e.printStackTrace();
         }
         return isAvailable;
     }
@@ -72,8 +76,8 @@ public class TableDAO extends DAO {
     // 3. Lấy danh sách các bàn ĐANG CÓ KHÁCH ngồi (Module 3: Gọi món)
     public ArrayList<Table> getOccupiedTables() {
         ArrayList<Table> list = new ArrayList<>();
-        // Logic: Tìm các bàn có trạng thái thực tế là đang phục vụ
-        String sql = "SELECT * FROM tblTable WHERE status = 'Đang phục vụ'";
+        // Thêm N'' để đảm bảo đọc đúng tiếng Việt có dấu trong SQL Server
+        String sql = "SELECT * FROM tblTable WHERE status = N'Đang phục vụ'";
         try {
             PreparedStatement ps = con.prepareStatement(sql);
             ResultSet rs = ps.executeQuery();
@@ -87,6 +91,7 @@ public class TableDAO extends DAO {
                 list.add(t);
             }
         } catch (SQLException e) {
+            e.printStackTrace();
         }
         return list;
     }
