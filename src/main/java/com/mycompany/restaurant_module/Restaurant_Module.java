@@ -4,6 +4,10 @@
 
 package com.mycompany.restaurant_module;
 
+import model.User;
+import view.manager.ManagerHomeFrm;
+import javax.swing.SwingUtilities;
+
 /**
  *
  * @author annguyen
@@ -11,6 +15,11 @@ package com.mycompany.restaurant_module;
 public class Restaurant_Module {
 
     public static void main(String[] args) {
-        System.out.println("Hello World!");
+        SwingUtilities.invokeLater(() -> {
+            User manager = new User();
+            manager.setName("Manager");
+            manager.setRole("Manager");
+            new ManagerHomeFrm(manager).setVisible(true);
+        });
     }
 }
