@@ -3,6 +3,7 @@ package view.manager;
 import dao.DishStatDAO;
 import model.*;
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
@@ -36,12 +37,15 @@ public class BestSellingDishStatFrm extends JFrame implements ActionListener {
     private void initComponents() {
         setLayout(new BorderLayout(10, 10));
 
+        // Container cho North để chứa cả Tiêu đề và Bộ lọc
+        JPanel pnlNorth = new JPanel(new BorderLayout());
+
         // === Panel Tiêu đề ===
         JLabel lblTitle = new JLabel("THỐNG KÊ MÓN ĂN BÁN CHẠY", JLabel.CENTER);
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 17));
         lblTitle.setForeground(new Color(142, 68, 173));
         lblTitle.setBorder(BorderFactory.createEmptyBorder(15, 0, 5, 0));
-        add(lblTitle, BorderLayout.NORTH);
+        pnlNorth.add(lblTitle, BorderLayout.NORTH);
 
         // === Panel Bộ lọc thời gian ===
         JPanel pnlFilter = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
@@ -67,7 +71,8 @@ public class BestSellingDishStatFrm extends JFrame implements ActionListener {
         btnStat.addActionListener(this);
         pnlFilter.add(btnStat);
 
-        add(pnlFilter, BorderLayout.NORTH);
+        pnlNorth.add(pnlFilter, BorderLayout.CENTER);
+        add(pnlNorth, BorderLayout.NORTH);
 
         // === Bảng kết quả ===
         String[] columns = {"Hạng", "Mã món", "Tên món", "Danh mục", "Đơn giá (VNĐ)", "Tổng SL bán", "Tổng doanh thu (VNĐ)"};
@@ -76,13 +81,30 @@ public class BestSellingDishStatFrm extends JFrame implements ActionListener {
             public boolean isCellEditable(int row, int column) { return false; }
         };
         tblDishStat = new JTable(tableModel);
+        tblDishStat.setAutoCreateRowSorter(true);
         tblDishStat.setRowHeight(28);
         tblDishStat.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
         tblDishStat.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+
+        // Cấu hình render
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
+        rightRenderer.setHorizontalAlignment(JLabel.RIGHT);
+
+        for (int i = 0; i < 7; i++) {
+            if (i == 4 || i == 6) {
+                tblDishStat.getColumnModel().getColumn(i).setCellRenderer(rightRenderer);
+            } else {
+                tblDishStat.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+            }
+        }
+
         // Đặt độ rộng cột
-        tblDishStat.getColumnModel().getColumn(0).setPreferredWidth(40);
-        tblDishStat.getColumnModel().getColumn(1).setPreferredWidth(70);
-        tblDishStat.getColumnModel().getColumn(2).setPreferredWidth(160);
+        int[] widths = {50, 80, 180, 100, 100, 80, 120};
+        for (int i = 0; i < widths.length; i++) {
+            tblDishStat.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
+        }
 
         JScrollPane scrollPane = new JScrollPane(tblDishStat);
         scrollPane.setBorder(BorderFactory.createTitledBorder("Bảng xếp hạng món ăn"));
