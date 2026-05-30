@@ -22,6 +22,7 @@ public class TableDAO extends DAO {
      */
     public ArrayList<Table> getServingTables() {
         ArrayList<Table> list = new ArrayList<>();
+        if (con == null) return list;
         String sql = "SELECT * FROM tblTable WHERE status = N'Đang phục vụ'";
         try {
             PreparedStatement ps = con.prepareStatement(sql);
@@ -49,6 +50,7 @@ public class TableDAO extends DAO {
      */
     public ArrayList<Table> getAllTables() {
         ArrayList<Table> list = new ArrayList<>();
+        if (con == null) return list;
         String sql = "SELECT * FROM tblTable ORDER BY tableCode";
         try {
             PreparedStatement ps = con.prepareStatement(sql);
@@ -77,6 +79,7 @@ public class TableDAO extends DAO {
      * @return true nếu cập nhật thành công, false nếu có lỗi.
      */
     public boolean updateTableStatus(int tableId, String status) {
+        if (con == null) return false;
         String sql = "UPDATE tblTable SET status = ? WHERE id = ?";
         try {
             PreparedStatement ps = con.prepareStatement(sql);
@@ -97,6 +100,7 @@ public class TableDAO extends DAO {
      * @return Đối tượng Table nếu tìm thấy, null nếu không.
      */
     public Table getTableByCode(String tableCode) {
+        if (con == null) return null;
         String sql = "SELECT * FROM tblTable WHERE tableCode = ?";
         try {
             PreparedStatement ps = con.prepareStatement(sql);

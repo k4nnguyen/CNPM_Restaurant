@@ -20,6 +20,7 @@ public class BillDAO extends DAO {
      * @return true nếu tạo hóa đơn thành công, false nếu có lỗi.
      */
     public boolean createBill(Bill bill) {
+        if (con == null) return false;
         boolean result = false;
         String sqlBill = "INSERT INTO tblBill(createdTime, totalAmount, paymentMethod, tblOrderId, tblUserId) "
                 + "VALUES(?,?,?,?,?)";
@@ -73,6 +74,7 @@ public class BillDAO extends DAO {
      * @return Đối tượng Bill nếu tìm thấy, null nếu không.
      */
     public Bill getBillById(int billId) {
+        if (con == null) return null;
         String sql = "SELECT b.*, u.fullName AS staffName FROM tblBill b "
                 + "JOIN tblUser u ON b.tblUserId = u.id WHERE b.id = ?";
         try {

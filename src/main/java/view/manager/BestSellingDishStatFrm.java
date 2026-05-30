@@ -143,8 +143,19 @@ public class BestSellingDishStatFrm extends JFrame implements ActionListener {
             return;
         }
 
-        tableModel.setRowCount(0);
         DishStatDAO dao = new DishStatDAO();
+
+        // Kiểm tra kết nối CSDL trước khi truy vấn
+        if (dao.con == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Không thể kết nối cơ sở dữ liệu.\nVui lòng kiểm tra SQL Server đang chạy và thử lại.",
+                    "Lỗi kết nối", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Làm trống bảng trước khi nạp dữ liệu mới
+        tableModel.setRowCount(0);
+
         listStat = dao.getBestSellingDish(startDate, endDate);
 
         if (listStat.isEmpty()) {
@@ -153,6 +164,7 @@ public class BestSellingDishStatFrm extends JFrame implements ActionListener {
             return;
         }
 
+        // Nạp từng dòng dữ liệu vào DefaultTableModel → JTable tự động cập nhật giao diện
         double totalRevenue = 0;
         int rank = 1;
         for (DishStat ds : listStat) {
@@ -167,6 +179,8 @@ public class BestSellingDishStatFrm extends JFrame implements ActionListener {
             });
             totalRevenue += ds.getTotalRevenue();
         }
+
+        // Cập nhật nhãn tổng doanh thu
         lblTotalRevenue.setText(String.format("%,.0f VNĐ", totalRevenue));
     }
 
