@@ -20,7 +20,7 @@ public class SelectTableFrm extends JFrame {
     private JTable tblSelectTable;
     private DefaultTableModel tableModel;
     private ArrayList<Table> listTable;
-
+    private JButton btnBack;
     public SelectTableFrm(User u) {
         super("Select Table");
         this.user = u;
@@ -37,24 +37,38 @@ public class SelectTableFrm extends JFrame {
         headerPanel.add(new JLabel("(8)"), BorderLayout.WEST);
         headerPanel.add(new JLabel("Select Table", SwingConstants.CENTER), BorderLayout.CENTER);
 
-        String[] cols = {"ID", "Table Code", "Datetime", "Number of people"};
+        String[] cols = {"ID", "Table Code", "Status", "Capacity"};
         tableModel = new DefaultTableModel(cols, 0) {
             @Override
             public boolean isCellEditable(int row, int column) { return false; }
         };
         tblSelectTable = new JTable(tableModel);
         tblSelectTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
+        
+        btnBack = new JButton("Back");
+        btnBack.setBackground(new Color(255, 255, 153)); // Màu vàng nhạt
+        btnBack.setFocusPainted(false);
+        btnBack.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        headerPanel.add(btnBack, BorderLayout.EAST);
+        
         mainPanel.add(headerPanel, BorderLayout.NORTH);
         mainPanel.add(new JScrollPane(tblSelectTable), BorderLayout.CENTER);
         this.add(mainPanel);
 
-        // Dummy Data
-        listTable = new ArrayList<>();
-        Table t1 = new Table(); t1.setId(1); t1.setTableCode("T001"); t1.setCapacity(4);
-        listTable.add(t1);
-        tableModel.addRow(new Object[]{t1.getId(), t1.getTableCode(), "21/05/2026 19:00", t1.getCapacity()});
-
+        // --- KẾT NỐI DAO TẠI ĐÂY ---
+        dao.TableDAO dao = new dao.TableDAO();
+        listTable = dao.getOccupiedTables(); // Lấy các bàn có trạng thái Đang phục vụ
+        
+        if (listTable != null) {
+            for (Table t : listTable) {
+                tableModel.addRow(new Object[]{t.getId(), t.getTableCode(), "Đang phục vụ", t.getCapacity()});
+            }
+        }
+        
+        btnBack.addActionListener(e -> {
+            new StaffHomeFrm(this.user).setVisible(true); 
+            this.dispose();
+        });
         // Chọn bằng phím Enter
         tblSelectTable.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "Enter");
         tblSelectTable.getActionMap().put("Enter", new AbstractAction() {

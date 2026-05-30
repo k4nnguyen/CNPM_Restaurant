@@ -21,7 +21,7 @@ import java.util.Date;
 public class SearchFreeTableFrm extends JFrame implements ActionListener {
     private User user;
     private JTextField txtDatetime, txtQuantity;
-    private JButton btnSearch;
+    private JButton btnSearch, btnBack;
     private JTable tblFreeTable;
     private DefaultTableModel tableModel;
     private ArrayList<Table> listTable;
@@ -45,7 +45,13 @@ public class SearchFreeTableFrm extends JFrame implements ActionListener {
         headerPanel.setOpaque(false);
         headerPanel.add(new JLabel("(2)"), BorderLayout.WEST);
         headerPanel.add(new JLabel("Search Free Table", SwingConstants.CENTER), BorderLayout.CENTER);
-
+        
+        btnBack = new JButton("Back");
+        btnBack.setBackground(new Color(255, 255, 153)); // Màu vàng nhạt
+        btnBack.setFocusPainted(false);
+        btnBack.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        headerPanel.add(btnBack, BorderLayout.EAST);
+        
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
@@ -86,7 +92,10 @@ public class SearchFreeTableFrm extends JFrame implements ActionListener {
 
         // --- Bắt sự kiện ---
         btnSearch.addActionListener(this);
-        
+        btnBack.addActionListener(e -> {
+            new StaffHomeFrm(this.user).setVisible(true); // Quay lại trang chủ nhân viên
+            this.dispose(); // Đóng form hiện tại
+        });
         // Sự kiện phím Enter trên JTable
         tblFreeTable.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "Enter");
         tblFreeTable.getActionMap().put("Enter", new AbstractAction() {
@@ -96,7 +105,7 @@ public class SearchFreeTableFrm extends JFrame implements ActionListener {
             }
         });
     }
-
+    
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource().equals(btnSearch)) {
@@ -163,6 +172,7 @@ public class SearchFreeTableFrm extends JFrame implements ActionListener {
         int totalCapacity = 0; // Biến tính tổng sức chứa các bàn đã chọn
 
         Booking tempBooking = new Booking();
+        tempBooking.setUser(this.user);
         // Tách chuỗi theo khoảng trắng
         String[] parts = txtDatetime.getText().trim().split(" ");
         try {

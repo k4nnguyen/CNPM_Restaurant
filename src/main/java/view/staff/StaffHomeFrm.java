@@ -106,8 +106,17 @@ public class StaffHomeFrm extends JFrame implements ActionListener {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                // Khởi tạo đối tượng User và set dữ liệu khớp 100% với record trong CSDL
                 User dummyUser = new User();
-                dummyUser.setName("An"); // Để hiển thị "Welcome An"
+                dummyUser.setId(1);
+                dummyUser.setName("Nguyễn Kim An");
+                dummyUser.setUsername("staff01");
+                dummyUser.setPassword("123");
+                dummyUser.setRole("nhanvien");
+                dummyUser.setPhone("0123456789");
+                dummyUser.setEmail("annguyen@gmail.com");
+
+                // Truyền user vào form và hiển thị
                 new StaffHomeFrm(dummyUser).setVisible(true);
             }
         });

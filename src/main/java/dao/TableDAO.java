@@ -17,19 +17,21 @@ public class TableDAO extends DAO {
         super(); 
     }
 
-    // 1. Tìm kiếm bàn trống (Module 1: Đặt bàn)
+    // 1. Tìm kiếm bàn trống (Sửa lại hỗ trợ ghép bàn & Chặn khoảng thời gian 75 phút)
     public ArrayList<Table> searchFreeTable(String date, String time, int quantity) {
         ArrayList<Table> list = new ArrayList<>();
-        // Cập nhật SQL: Lọc trực tiếp status = 'Trống' và kiểm tra không bị trùng lịch đặt trước
-        String sql = "SELECT * FROM tblTable WHERE status = N'Trống' AND id NOT IN (" +
-                     "SELECT tblTableId FROM tblBookedTable bt " +
-                     "JOIN tblBooking b ON bt.tblBookingId = b.id " +
-                     "WHERE b.bookDate = ? AND b.bookTime = ? AND b.status IN (N'Pending', N'Confirmed'))";
+        
+        // SQL Server: DATEDIFF tính khoảng cách phút. ABS lấy trị tuyệt đối. 75 phút = 1h15p.
+        String sql = "SELECT * FROM tblTable WHERE id NOT IN (" +
+                 "SELECT tblTableId FROM tblBookedTable bt " +
+                 "JOIN tblBooking b ON bt.tblBookingId = b.id " +
+                 "WHERE b.bookDate = ? AND b.status IN (N'Chờ nhận bàn', N'Đã xác nhận') " +
+                 "AND ABS(DATEDIFF(MINUTE, CAST(b.bookTime AS TIME), CAST(? AS TIME))) < 75)";
         try {
             PreparedStatement ps = con.prepareStatement(sql);
-            // Vì đã bỏ capacity, ta chỉ truyền tham số ngày và giờ (Index 1 và 2)
             ps.setString(1, date);
-            ps.setString(2, time);
+            ps.setString(2, time); // Truyền giờ vào dấu ? thứ 2 để SQL Server tự ép kiểu sang TIME và trừ
+            
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 Table t = new Table();
@@ -49,18 +51,18 @@ public class TableDAO extends DAO {
     // 2. Kiểm tra trạng thái 1 bàn cụ thể có trống hay không (Module 2: Sửa đặt bàn)
     public boolean checkTableAvailability(int tableId, String date, String time) {
         boolean isAvailable = true;
-        // Logic: Đếm số lượng phiếu đặt bàn bị trùng lịch của bàn này. 
-        // Nếu count > 0 nghĩa là bàn đã bị kẹt lịch -> false.
+        // Tương tự, áp dụng logic chặn 75 phút khi nhân viên muốn Edit đổi giờ của một booking cũ
         String sql = "SELECT COUNT(*) AS count FROM tblBookedTable bt " +
                      "JOIN tblBooking b ON bt.tblBookingId = b.id " +
-                     "WHERE bt.tblTableId = ? AND b.bookDate = ? AND b.bookTime = ? AND b.status IN (N'Pending', N'Confirmed')";
+                     "WHERE bt.tblTableId = ? AND b.bookDate = ? AND b.status IN (N'Chờ nhận bàn', N'Đã xác nhận') " +
+                     "AND ABS(DATEDIFF(MINUTE, CAST(b.bookTime AS TIME), CAST(? AS TIME))) < 75";
         try {
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setInt(1, tableId);
             ps.setString(2, date);
             ps.setString(3, time);
-            ResultSet rs = ps.executeQuery();
             
+            ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 int count = rs.getInt("count");
                 if (count > 0) {

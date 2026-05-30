@@ -20,7 +20,7 @@ public class EditBookingFrm extends JFrame implements ActionListener {
     private User user;
     private Booking booking;
     private JTextField txtDate, txtTime, txtQuantity;
-    private JButton btnCheckFreeTable, btnConfirm;
+    private JButton btnCheckFreeTable, btnConfirm, btnBack;
     private boolean isCheckedAndFree = false; // Cờ kiểm tra trạng thái hợp lệ
 
     public EditBookingFrm(User u, Booking booking) {
@@ -77,10 +77,16 @@ public class EditBookingFrm extends JFrame implements ActionListener {
         btnConfirm = new JButton("Confirm");
         btnConfirm.setBackground(new Color(50, 205, 50)); 
         btnConfirm.setPreferredSize(new Dimension(150, 35));
-
+        
+        btnBack = new JButton("Back");
+        btnBack.setBackground(new Color(255, 255, 153)); // Màu vàng nhạt
+        btnBack.setFocusPainted(false);
+        btnBack.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        headerPanel.add(btnBack, BorderLayout.EAST);
+        
         btnPanel.add(btnCheckFreeTable);
         btnPanel.add(btnConfirm);
-
+        
         mainPanel.add(headerPanel, BorderLayout.NORTH);
         mainPanel.add(formPanel, BorderLayout.CENTER);
         mainPanel.add(btnPanel, BorderLayout.SOUTH);
@@ -88,6 +94,10 @@ public class EditBookingFrm extends JFrame implements ActionListener {
         this.add(mainPanel);
         btnCheckFreeTable.addActionListener(this);
         btnConfirm.addActionListener(this);
+        btnBack.addActionListener(e -> {
+            new SearchBookingFrm(this.user).setVisible(true); 
+            this.dispose();
+        });
     }
 
     private boolean validateInputs() {
@@ -131,9 +141,21 @@ public class EditBookingFrm extends JFrame implements ActionListener {
                 return;
             }
             
-            JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
-            new StaffHomeFrm(user).setVisible(true);
-            this.dispose();
+            // --- KẾT NỐI DAO TẠI ĐÂY ---
+            dao.BookingDAO dao = new dao.BookingDAO();
+            booking.setBookTime(txtTime.getText().trim());
+            try {
+                booking.setBookDate(new SimpleDateFormat("dd/MM/yyyy").parse(txtDate.getText().trim()));
+            } catch (Exception ex){}
+            booking.setQuantity(Integer.parseInt(txtQuantity.getText().trim()));
+            
+            if (dao.updateBooking(booking)) {
+                JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
+                new StaffHomeFrm(user).setVisible(true);
+                this.dispose();
+            } else {
+                JOptionPane.showMessageDialog(this, "Lỗi cập nhật CSDL!");
+            }
         }
     }
 

@@ -17,7 +17,7 @@ import java.util.ArrayList;
 public class SearchBookingFrm extends JFrame implements ActionListener {
     private User user;
     private JTextField txtClientPhone;
-    private JButton btnSearch;
+    private JButton btnSearch, btnBack;
     private JTable tblBooking;
     private DefaultTableModel tableModel;
     private ArrayList<Booking> listBooking;
@@ -56,7 +56,13 @@ public class SearchBookingFrm extends JFrame implements ActionListener {
         btnSearch.setBackground(Color.WHITE);
         btnSearch.setPreferredSize(new Dimension(150, 30));
         btnPanel.add(btnSearch);
-
+        
+        btnBack = new JButton("Back");
+        btnBack.setBackground(new Color(255, 255, 153)); // Màu vàng nhạt
+        btnBack.setFocusPainted(false);
+        btnBack.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        headerPanel.add(btnBack, BorderLayout.EAST);
+        
         topWrapper.add(headerPanel, BorderLayout.NORTH);
         topWrapper.add(formPanel, BorderLayout.CENTER);
         topWrapper.add(btnPanel, BorderLayout.SOUTH);
@@ -77,6 +83,10 @@ public class SearchBookingFrm extends JFrame implements ActionListener {
         this.add(mainPanel);
 
         btnSearch.addActionListener(this);
+        btnBack.addActionListener(e -> {
+            new StaffHomeFrm(this.user).setVisible(true); 
+            this.dispose();
+        });
         
         // Sự kiện Enter để chọn
         tblBooking.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "Enter");
@@ -97,33 +107,35 @@ public class SearchBookingFrm extends JFrame implements ActionListener {
                 return;
             }
             
-            // Giả lập Dữ liệu
-            listBooking = new ArrayList<>();
-            Booking b1 = new Booking(); b1.setId(1); b1.setBookTime("19:00"); b1.setQuantity(4);
-            try { b1.setBookDate(new java.text.SimpleDateFormat("dd/MM/yyyy").parse("20/05/2026")); } catch(Exception ex){}
-            listBooking.add(b1);
+            // --- KẾT NỐI DAO TẠI ĐÂY ---
+            dao.BookingDAO dao = new dao.BookingDAO();
+            listBooking = dao.searchBooking(txtClientPhone.getText().trim());
 
             tableModel.setRowCount(0);
-            if (listBooking != null) {
+            if (listBooking != null && !listBooking.isEmpty()) {
                 for (Booking b : listBooking) {
-                    // 1. Ép định dạng ngày thành dd/MM/yyyy
                     String dateStr = "";
-                    if (b.getBookDate() != null) {
+                    if(b.getBookDate() != null) {
                         dateStr = new java.text.SimpleDateFormat("dd/MM/yyyy").format(b.getBookDate());
                     }
-                    
-                    // 2. Ghép ngày và giờ (Nếu bạn chỉ muốn hiện ngày thì bỏ phần b.getBookTime() đi)
                     String timeStr = b.getBookTime() != null ? b.getBookTime() : "";
-                    String dateTimeDisplay = (dateStr + " " + timeStr).trim();
-
-                    // 3. Đẩy vào bảng
-                    tableModel.addRow(new Object[]{
-                        b.getId(), 
-                        "T001", // Mã bàn (Bạn có thể lấy từ list table của Booking)
-                        dateTimeDisplay, 
-                        b.getQuantity()
-                    });
+                    
+                    // --- BỔ SUNG: Ghép nối danh sách mã bàn ---
+                    String tableCodes = "";
+                    if (b.getBookedTables() != null && !b.getBookedTables().isEmpty()) {
+                        StringBuilder sb = new StringBuilder();
+                        for (model.BookedTable bt : b.getBookedTables()) {
+                            sb.append(bt.getTable().getTableCode()).append(", ");
+                        }
+                        // Cắt bỏ dấu phẩy và khoảng trắng thừa ở cuối chuỗi
+                        tableCodes = sb.substring(0, sb.length() - 2); 
+                    }
+                    
+                    // Đẩy dữ liệu chuẩn vào bảng
+                    tableModel.addRow(new Object[]{b.getId(), tableCodes, dateStr + " " + timeStr, b.getQuantity()});
                 }
+            } else {
+                JOptionPane.showMessageDialog(this, "Khách hàng này chưa có phiếu đặt bàn nào!");
             }
         }
     }

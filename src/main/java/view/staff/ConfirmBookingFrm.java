@@ -20,7 +20,7 @@ import java.text.SimpleDateFormat;
 public class ConfirmBookingFrm extends JFrame implements ActionListener {
     private User user;
     private Booking booking;
-    private JButton btnConfirm, btnCancel;
+    private JButton btnConfirm, btnCancel, btnBack;
     private JTextField txtClientName, txtClientPhone, txtDatetime, txtQuantity, txtTableCode;
 
     public ConfirmBookingFrm(User user, Booking b) {
@@ -86,7 +86,13 @@ public class ConfirmBookingFrm extends JFrame implements ActionListener {
         btnConfirm = new JButton("Confirm");
         btnConfirm.setBackground(new Color(50, 205, 50)); 
         btnConfirm.setPreferredSize(new Dimension(120, 35));
-
+        
+        btnBack = new JButton("Back");
+        btnBack.setBackground(new Color(255, 255, 153)); // Màu vàng nhạt
+        btnBack.setFocusPainted(false);
+        btnBack.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        headerPanel.add(btnBack, BorderLayout.EAST);
+        
         btnPanel.add(btnCancel); btnPanel.add(btnConfirm);
 
         mainPanel.add(headerPanel, BorderLayout.NORTH);
@@ -97,6 +103,10 @@ public class ConfirmBookingFrm extends JFrame implements ActionListener {
 
         btnCancel.addActionListener(this);
         btnConfirm.addActionListener(this);
+        btnBack.addActionListener(e -> {
+            new SearchClientFrm(this.user, this.booking).setVisible(true);
+            this.dispose(); // Đóng form hiện tại
+        });
     }
 
     @Override
@@ -106,10 +116,15 @@ public class ConfirmBookingFrm extends JFrame implements ActionListener {
             new StaffHomeFrm(user).setVisible(true);
             this.dispose();
         } else if (e.getSource().equals(btnConfirm)) {
-            // BỎ QUA XỬ LÝ DAO THEO YÊU CẦU
-            JOptionPane.showMessageDialog(this, "Booking successfully!");
-            new StaffHomeFrm(user).setVisible(true);
-            this.dispose();
+            // --- KẾT NỐI DAO TẠI ĐÂY ---
+            dao.BookingDAO dao = new dao.BookingDAO();
+            if (dao.addBooking(booking)) {
+                JOptionPane.showMessageDialog(this, "Booking successfully!");
+                new StaffHomeFrm(user).setVisible(true);
+                this.dispose();
+            } else {
+                JOptionPane.showMessageDialog(this, "Booking failed! Vui lòng thử lại.");
+            }
         }
     }
 
@@ -126,6 +141,7 @@ public class ConfirmBookingFrm extends JFrame implements ActionListener {
                 
                 Booking b = new Booking();
                 b.setClient(c);
+                b.setUser(u);
                 // Set chuẩn Date và Time tách biệt
                 b.setBookDate(new java.text.SimpleDateFormat("dd/MM/yyyy").parse("20/05/2025"));
                 b.setBookTime("19:00");

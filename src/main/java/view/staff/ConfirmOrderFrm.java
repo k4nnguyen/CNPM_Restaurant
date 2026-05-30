@@ -100,9 +100,17 @@ public class ConfirmOrderFrm extends JFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource().equals(btnConfirm)) {
-            JOptionPane.showMessageDialog(this, "Gọi món thành công!");
-            new StaffHomeFrm(user).setVisible(true); // Về Frm 1
-            this.dispose();
+            // --- KẾT NỐI DAO TẠI ĐÂY ---
+            dao.OrderDAO dao = new dao.OrderDAO();
+            order.setOrderTime(new java.util.Date()); // Chốt thời gian hiện tại
+            
+            if (dao.addOrder(order)) {
+                JOptionPane.showMessageDialog(this, "Gọi món thành công! Hóa đơn đã được lưu.");
+                new StaffHomeFrm(user).setVisible(true);
+                this.dispose();
+            } else {
+                JOptionPane.showMessageDialog(this, "Lỗi khi lưu đơn gọi món!");
+            }
         } else if (e.getSource().equals(btnCancel)) {
             new StaffHomeFrm(user).setVisible(true); // Về Frm 1
             this.dispose();
@@ -112,3 +120,4 @@ public class ConfirmOrderFrm extends JFrame implements ActionListener {
         }
     }
 }
+

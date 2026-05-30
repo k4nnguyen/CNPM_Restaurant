@@ -21,7 +21,7 @@ public class OrderFrm extends JFrame implements ActionListener {
     private User user;
     private Order tmpOrder;
     private JTextField txtDishName;
-    private JButton btnSearch, btnConfirm;
+    private JButton btnSearch, btnConfirm, btnBack;
     private JTable tblDish;
     private DefaultTableModel tableModel;
     private ArrayList<Dish> listDish;
@@ -77,7 +77,13 @@ public class OrderFrm extends JFrame implements ActionListener {
         btnConfirm.setFocusPainted(false);
         btnConfirm.setPreferredSize(new Dimension(150, 35));
         formPanel.add(btnConfirm, gbc);
-
+        
+        btnBack = new JButton("Back");
+        btnBack.setBackground(new Color(255, 255, 153)); // Màu vàng nhạt
+        btnBack.setFocusPainted(false);
+        btnBack.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        headerPanel.add(btnBack, BorderLayout.EAST);
+        
         topWrapper.add(headerPanel, BorderLayout.NORTH);
         topWrapper.add(formPanel, BorderLayout.CENTER);
 
@@ -115,32 +121,36 @@ public class OrderFrm extends JFrame implements ActionListener {
 
         btnSearch.addActionListener(this);
         btnConfirm.addActionListener(this);
-        
+        btnBack.addActionListener(e -> {
+            new SelectTableFrm(this.user).setVisible(true); 
+            this.dispose();
+        });  
         // Gọi dữ liệu (Đã tích hợp giữ lại state)
         loadData();
     }
 
     private void loadData() {
-        // Tương lai thay bằng: listDish = new DishDAO().searchDish(txtDishName.getText().trim());
-        listDish = new ArrayList<>();
-        Dish d1 = new Dish(); d1.setId(1); d1.setName("Pho bo"); d1.setPrice(45000);
-        Dish d2 = new Dish(); d2.setId(2); d2.setName("Pho ga"); d2.setPrice(40000);
-        Dish d3 = new Dish(); d3.setId(3); d3.setName("Com rang"); d3.setPrice(50000);
-        listDish.add(d1); listDish.add(d2); listDish.add(d3);
+        // --- KẾT NỐI DAO TẠI ĐÂY ---
+        dao.DishDAO dao = new dao.DishDAO();
+        // Lấy từ khóa, nếu ô textbox rỗng thì lấy toàn bộ
+        String keyword = txtDishName.getText().trim(); 
+        listDish = dao.searchDish(keyword);
 
         tableModel.setRowCount(0);
-        for (Dish d : listDish) {
-            int qty = 0;
-            // KIỂM TRA ĐỒNG BỘ: Nếu món này đã tồn tại trong tmpOrder (từ form 10 trả về), lấy số lượng cũ
-            if (tmpOrder != null && tmpOrder.getOrderDishes() != null) {
-                for (OrderDish od : tmpOrder.getOrderDishes()) {
-                    if (od.getDish().getId() == d.getId()) {
-                        qty = od.getQuantity();
-                        break;
+        if (listDish != null) {
+            for (Dish d : listDish) {
+                int qty = 0;
+                // Đồng bộ state số lượng cũ
+                if (tmpOrder != null && tmpOrder.getOrderDishes() != null) {
+                    for (model.OrderDish od : tmpOrder.getOrderDishes()) {
+                        if (od.getDish().getId() == d.getId()) {
+                            qty = od.getQuantity();
+                            break;
+                        }
                     }
                 }
+                tableModel.addRow(new Object[]{d.getId(), d.getName(), qty, d.getPrice()});
             }
-            tableModel.addRow(new Object[]{d.getId(), d.getName(), qty, d.getPrice()});
         }
     }
 

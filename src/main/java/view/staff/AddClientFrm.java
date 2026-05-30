@@ -17,7 +17,7 @@ public class AddClientFrm extends JFrame implements ActionListener {
     private User user;
     private Booking tmpBooking;
     private JTextField txtClientName, txtClientPhone, txtClientEmail, txtClientAddress;
-    private JButton btnAddClient;
+    private JButton btnAddClient, btnBack;
 
     public AddClientFrm(User user, Booking tmpBooking) {
         super("Add New Client");
@@ -60,13 +60,23 @@ public class AddClientFrm extends JFrame implements ActionListener {
         btnAddClient.setBackground(new Color(255, 255, 153));
         btnAddClient.setPreferredSize(new Dimension(150, 30));
         btnPanel.add(btnAddClient);
-
+        
+        btnBack = new JButton("Back");
+        btnBack.setBackground(new Color(255, 255, 153)); // Màu vàng nhạt
+        btnBack.setFocusPainted(false);
+        btnBack.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        headerPanel.add(btnBack, BorderLayout.EAST);
+        
         mainPanel.add(headerPanel, BorderLayout.NORTH);
         mainPanel.add(formPanel, BorderLayout.CENTER);
         mainPanel.add(btnPanel, BorderLayout.SOUTH);
 
         this.add(mainPanel);
         btnAddClient.addActionListener(this);
+        btnBack.addActionListener(e -> {
+            new SearchClientFrm(this.user, this.tmpBooking).setVisible(true); 
+            this.dispose(); // Đóng form hiện tại
+        });
     }
 
     @Override

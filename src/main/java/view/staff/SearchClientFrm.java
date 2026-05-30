@@ -19,7 +19,7 @@ public class SearchClientFrm extends JFrame implements ActionListener {
     private User user;
     private Booking tmpBooking;
     private JTextField txtClientName, txtClientPhone;
-    private JButton btnSearch, btnAddClient;
+    private JButton btnSearch, btnAddClient, btnBack;
     private JTable tblClient;
     private DefaultTableModel tableModel;
     private ArrayList<Client> listClient;
@@ -43,7 +43,13 @@ public class SearchClientFrm extends JFrame implements ActionListener {
         headerPanel.setOpaque(false);
         headerPanel.add(new JLabel("(3)"), BorderLayout.WEST);
         headerPanel.add(new JLabel("Search Client", SwingConstants.CENTER), BorderLayout.CENTER);
-
+        
+        btnBack = new JButton("Back");
+        btnBack.setBackground(new Color(255, 255, 153)); // Màu vàng nhạt
+        btnBack.setFocusPainted(false);
+        btnBack.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        headerPanel.add(btnBack, BorderLayout.EAST);
+        
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
@@ -91,6 +97,11 @@ public class SearchClientFrm extends JFrame implements ActionListener {
         // Events
         btnSearch.addActionListener(this);
         btnAddClient.addActionListener(this);
+        
+        btnBack.addActionListener(e -> {
+            new SearchFreeTableFrm(this.user).setVisible(true); // Quay lại trang chủ nhân viên
+            this.dispose(); // Đóng form hiện tại
+        });
         
         // Sự kiện phím Enter trên JTable để chọn khách
         tblClient.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "Enter");

@@ -80,6 +80,7 @@ CREATE TABLE tblBookedTable (
 CREATE TABLE tblOrder (
     ID INT IDENTITY(1,1) PRIMARY KEY,
     orderTime DATETIME NOT NULL,
+    isPaid INT DEFAULT 0, -- 0: Chưa thanh toán, 1: Đã thanh toán
     tblUserID INT FOREIGN KEY REFERENCES tblUser(ID),
     tblTableID INT FOREIGN KEY REFERENCES tblTable(ID)
 );
@@ -161,15 +162,4 @@ VALUES
 ('TM01', N'Tráng miệng', N'Chè hạt sen nhãn lồng', 35000),
 ('TM02', N'Tráng miệng', N'Kem tươi Vanilla', 30000),
 ('TM03', N'Tráng miệng', N'Trái cây theo mùa', 60000);
-
--- Thêm Đặt bàn nháp để test form Search Booking (Ngày 20/05/2026)
-INSERT INTO tblBooking (bookDate, bookTime, quantity, status, tblClientID, tblUserID)
-VALUES 
-('2026-05-20', '19:00', 6, N'Pending', 1, 1);
-
--- Liên kết bàn T001 và T002 cho phiếu đặt bàn ID = 1 vừa tạo
-INSERT INTO tblBookedTable (isCheckedin, tblBookingID, tblTableID)
-VALUES 
-(0, 1, 1),
-(0, 1, 2);
 

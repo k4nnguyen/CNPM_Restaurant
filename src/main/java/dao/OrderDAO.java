@@ -14,53 +14,88 @@ public class OrderDAO extends DAO {
     public OrderDAO() { super(); }
 
     // Lưu hóa đơn gọi món
-    public boolean addOrder(Order o) {
+    public boolean addOrder(model.Order order) {
         boolean result = false;
-        // Câu lệnh SQL thêm vào bảng cha (tblOrder)
-        String sqlOrder = "INSERT INTO tblOrder(orderTime, totalAmount, status, tblUserId, tblTableId) VALUES(?,?,?,?,?)";
-        // Câu lệnh SQL thêm vào bảng con (tblOrderDish)
-        String sqlOrderDish = "INSERT INTO tblOrderDish(quantity, currentPrice, tblOrderId, tblDishId) VALUES(?,?,?,?)";
         
+        // 1. Các câu lệnh SQL cần thiết
+        String sqlCheckActiveOrder = "SELECT id FROM tblOrder WHERE tblTableId = ? AND isPaid = 0";
+        String sqlCreateOrder = "INSERT INTO tblOrder(orderTime, tblUserId, tblTableId, isPaid) VALUES(?,?,?,0)";
+        
+        String sqlCheckDishExist = "SELECT quantity FROM tblOrderDish WHERE tblOrderId = ? AND tblDishId = ?";
+        String sqlUpdateDish = "UPDATE tblOrderDish SET quantity = quantity + ? WHERE tblOrderId = ? AND tblDishId = ?";
+        String sqlInsertDish = "INSERT INTO tblOrderDish(quantity, currentPrice, tblOrderId, tblDishId) VALUES(?,?,?,?)";
+
         try {
             con.setAutoCommit(false); // Bắt đầu Transaction
-            
-            // 1. Insert Order
-            PreparedStatement ps1 = con.prepareStatement(sqlOrder, Statement.RETURN_GENERATED_KEYS);
-            // Dùng Timestamp để lấy được cả ngày và giờ gọi món
-            ps1.setTimestamp(1, new java.sql.Timestamp(o.getOrderTime().getTime()));
-            ps1.setDouble(2, o.getTotalAmount());
-            ps1.setString(3, Order.STATUS_UNPAID); // Mặc định là "Chưa thanh toán" khi mới gọi món
-            ps1.setInt(4, o.getUser().getId());
-            ps1.setInt(5, o.getTable().getId());
-            ps1.executeUpdate();
-            
-            // Lấy ID tự tăng của bảng tblOrder vừa sinh ra
-            ResultSet generatedKeys = ps1.getGeneratedKeys();
-            if (generatedKeys.next()) {
-                o.setId(generatedKeys.getInt(1));
-                
-                // 2. Insert các OrderDish (Chi tiết món ăn)
-                PreparedStatement ps2 = con.prepareStatement(sqlOrderDish);
-                for (OrderDish od : o.getOrderDishes()) {
-                    ps2.setInt(1, od.getQuantity());
-                    ps2.setDouble(2, od.getCurrentPrice()); // Lưu giá tại thời điểm gọi để không bị ảnh hưởng nếu sau này đổi giá menu
-                    ps2.setInt(3, o.getId());
-                    ps2.setInt(4, od.getDish().getId());
-                    ps2.executeUpdate();
+
+            int orderId = -1;
+
+            // BƯỚC 1: Kiểm tra bàn này đã có Order nào đang mở chưa?
+            PreparedStatement psCheckOrder = con.prepareStatement(sqlCheckActiveOrder);
+            psCheckOrder.setInt(1, order.getTable().getId());
+            ResultSet rsOrder = psCheckOrder.executeQuery();
+
+            if (rsOrder.next()) {
+                // Đã có khách ngồi và đang gọi món dở -> Dùng lại Order ID cũ
+                orderId = rsOrder.getInt("id");
+            } else {
+                // Khách mới toanh -> Tạo Order mới
+                PreparedStatement psCreateOrder = con.prepareStatement(sqlCreateOrder, Statement.RETURN_GENERATED_KEYS);
+                psCreateOrder.setTimestamp(1, new java.sql.Timestamp(System.currentTimeMillis()));
+                psCreateOrder.setInt(2, order.getUser().getId());
+                psCreateOrder.setInt(3, order.getTable().getId());
+                psCreateOrder.executeUpdate();
+
+                ResultSet generatedKeys = psCreateOrder.getGeneratedKeys();
+                if (generatedKeys.next()) {
+                    orderId = generatedKeys.getInt(1);
                 }
             }
-            
+
+            // BƯỚC 2: Xử lý danh sách món ăn (Cộng dồn hoặc Thêm mới)
+            if (orderId != -1) {
+                PreparedStatement psCheckDish = con.prepareStatement(sqlCheckDishExist);
+                PreparedStatement psUpdateDish = con.prepareStatement(sqlUpdateDish);
+                PreparedStatement psInsertDish = con.prepareStatement(sqlInsertDish);
+
+                for (model.OrderDish od : order.getOrderDishes()) {
+                    // Kiểm tra món này đã có trong bill chưa
+                    psCheckDish.setInt(1, orderId);
+                    psCheckDish.setInt(2, od.getDish().getId());
+                    ResultSet rsDish = psCheckDish.executeQuery();
+
+                    if (rsDish.next()) {
+                        // Món đã có -> UPDATE cộng dồn số lượng
+                        psUpdateDish.setInt(1, od.getQuantity()); // Số lượng gọi thêm
+                        psUpdateDish.setInt(2, orderId);
+                        psUpdateDish.setInt(3, od.getDish().getId());
+                        psUpdateDish.executeUpdate();
+                    } else {
+                        // Món mới toanh -> INSERT
+                        psInsertDish.setInt(1, od.getQuantity());
+                        psInsertDish.setDouble(2, od.getCurrentPrice());
+                        psInsertDish.setInt(3, orderId);
+                        psInsertDish.setInt(4, od.getDish().getId());
+                        psInsertDish.executeUpdate();
+                    }
+                }
+            }
+
             con.commit(); // Hoàn tất Transaction
             result = true;
+            
         } catch (SQLException e) {
+            e.printStackTrace();
             try {
-                con.rollback(); // Hoàn tác (Rollback) nếu có bất kỳ lỗi nào xảy ra
-            } catch (SQLException ex) { 
+                con.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
             }
         } finally {
             try {
-                con.setAutoCommit(true); // Trả lại trạng thái auto commit mặc định cho connection
-            } catch (SQLException ex) { 
+                con.setAutoCommit(true);
+            } catch (SQLException ex) {
+                ex.printStackTrace();
             }
         }
         return result;
