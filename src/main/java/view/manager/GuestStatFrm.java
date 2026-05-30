@@ -20,15 +20,15 @@ public class GuestStatFrm extends JFrame implements ActionListener {
 
     public GuestStatFrm() {
         super("Thống kê lượng khách theo khung giờ");
-        this.setSize(600, 400);
+        this.setSize(720, 450);
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setLocationRelativeTo(null);
 
         JPanel pnlNorth = new JPanel();
-        pnlNorth.add(new JLabel("Từ ngày (YYYY-MM-DD):"));
+        pnlNorth.add(new JLabel("Từ ngày:"));
         txtStartDate = new JTextField("2026-05-01", 10);
         pnlNorth.add(txtStartDate);
-        pnlNorth.add(new JLabel("Đến ngày (YYYY-MM-DD):"));
+        pnlNorth.add(new JLabel("Đến ngày:"));
         txtEndDate = new JTextField("2026-05-31", 10);
         pnlNorth.add(txtEndDate);
         

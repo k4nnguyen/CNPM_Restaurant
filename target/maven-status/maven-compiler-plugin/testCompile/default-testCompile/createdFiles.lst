@@ -1,0 +1,4 @@
+dao\BillDAOTest.class
+dao\TableDAOTest.class
+dao\BookingDAOTest.class
+dao\OrderDAOTest.class
