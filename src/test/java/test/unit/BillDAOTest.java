@@ -39,7 +39,7 @@ public class BillDAOTest {
     @DisplayName("TC-BILL-01: Tạo hóa đơn thành công")
     void testCreateBill_Success() {
         // Lấy đơn đặt món chưa thanh toán của bàn test
-        Order order = orderDAO.getOrderDetail(TEST_TABLE_ID);
+        model.Order order = orderDAO.getOrderDetail(TEST_TABLE_ID);
 
         // Điều kiện: bàn phải có order chưa thanh toán
         Assumptions.assumeTrue(order != null, "Bỏ qua test: không tìm thấy order chưa thanh toán cho bàn " + TEST_TABLE_ID);
@@ -74,7 +74,7 @@ public class BillDAOTest {
     @DisplayName("TC-BILL-02: Trạng thái Order cập nhật thành Đã thanh toán")
     void testCreateBill_OrderStatusUpdated() {
         // Sau khi thanh toán, không còn order chưa thanh toán cho bàn TEST_TABLE_ID
-        Order order = orderDAO.getOrderDetail(TEST_TABLE_ID);
+        model.Order order = orderDAO.getOrderDetail(TEST_TABLE_ID);
         assertNull(order, "Sau khi thanh toán, getOrderDetail() phải trả về null (không còn order chưa thanh toán)");
         System.out.println("✅ TC-BILL-02 PASSED: Order đã được cập nhật trạng thái 'Đã thanh toán'");
     }

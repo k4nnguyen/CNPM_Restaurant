@@ -26,7 +26,7 @@ public class OrderDAOTest {
      * và có danh sách orderItems.
      */
     @Test
-    @Order(1)
+    @org.junit.jupiter.api.Order(1)
     @DisplayName("TC-ORDER-01: Lấy chi tiết order hợp lệ")
     void testGetOrderDetail_ValidTable() {
         model.Order order = orderDAO.getOrderDetail(TEST_TABLE_ID);
@@ -44,7 +44,7 @@ public class OrderDAOTest {
      * TC-ORDER-02: getOrderDetail() với tableId không có order phải trả về null.
      */
     @Test
-    @Order(2)
+    @org.junit.jupiter.api.Order(2)
     @DisplayName("TC-ORDER-02: getOrderDetail() với bàn không có order trả về null")
     void testGetOrderDetail_NoOrder_ReturnsNull() {
         // ID bàn không tồn tại hoặc đã thanh toán hết
@@ -57,7 +57,7 @@ public class OrderDAOTest {
      * TC-ORDER-03: getAllUnpaidOrders() phải trả về danh sách không null.
      */
     @Test
-    @Order(3)
+    @org.junit.jupiter.api.Order(3)
     @DisplayName("TC-ORDER-03: getAllUnpaidOrders() trả về danh sách hợp lệ")
     void testGetAllUnpaidOrders_ReturnsNonNull() {
         ArrayList<model.Order> orders = orderDAO.getAllUnpaidOrders();
