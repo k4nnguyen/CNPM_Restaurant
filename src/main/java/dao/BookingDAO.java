@@ -18,6 +18,10 @@ public class BookingDAO extends DAO {
 
     // 1. Lưu thông tin đặt bàn mới (Sử dụng Transaction)
     public boolean addBooking(Booking b) {
+        if (con == null) {
+            System.err.println("Lỗi: Kết nối CSDL chưa được khởi tạo!");
+            return false;
+        }
         boolean result = false;
         String sqlBooking = "INSERT INTO tblBooking(bookDate, bookTime, quantity, status, tblClientId, tblUserId) VALUES(?,?,?,?,?,?)";
         String sqlBookedTable = "INSERT INTO tblBookedTable(isCheckedIn, tblBookingId, tblTableId) VALUES(?,?,?)";
@@ -52,15 +56,16 @@ public class BookingDAO extends DAO {
             
             con.commit(); // Hoàn tất Transaction
             result = true;
-        } catch (SQLException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             try {
                 con.rollback(); // Hoàn tác nếu có lỗi
-            } catch (SQLException ex) {
+            } catch (Exception ex) {
             }
         } finally {
             try {
                 con.setAutoCommit(true);
-            } catch (SQLException ex) {
+            } catch (Exception ex) {
             }
         }
         return result;
@@ -69,6 +74,10 @@ public class BookingDAO extends DAO {
     // 2. Tìm kiếm phiếu đặt bàn theo số điện thoại khách hàng (Module Sửa đặt bàn)
     public ArrayList<Booking> searchBooking(String phone) {
         ArrayList<Booking> list = new ArrayList<>();
+        if (con == null) {
+            System.err.println("Lỗi: Kết nối CSDL chưa được khởi tạo!");
+            return list;
+        }
         // JOIN bảng tblBooking và tblClient để lấy được cả thông tin hóa đơn lẫn khách hàng
         String sql = "SELECT b.*, c.name, c.phone, c.email, c.address FROM tblBooking b "
                    + "JOIN tblClient c ON b.tblClientId = c.id "
@@ -97,13 +106,18 @@ public class BookingDAO extends DAO {
                 b.setClient(c);
                 list.add(b);
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return list;
     }
 
     // 3. Cập nhật thông tin phiếu đặt bàn (Module Sửa đặt bàn)
     public boolean updateBooking(Booking b) {
+        if (con == null) {
+            System.err.println("Lỗi: Kết nối CSDL chưa được khởi tạo!");
+            return false;
+        }
         // Cập nhật ngày, giờ, số lượng dựa theo ID
         String sql = "UPDATE tblBooking SET bookDate = ?, bookTime = ?, quantity = ? WHERE id = ?";
         try {
@@ -114,7 +128,8 @@ public class BookingDAO extends DAO {
             ps.setInt(4, b.getId());
             
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -122,13 +137,17 @@ public class BookingDAO extends DAO {
     // 4. Lấy danh sách đặt bàn theo khoảng ngày phục vụ thống kê (Module Quản lý)
     public ArrayList<Booking> getBookingsByDateRange(String startDate, String endDate) {
         ArrayList<Booking> list = new ArrayList<>();
+        if (con == null) {
+            System.err.println("Lỗi: Kết nối CSDL chưa được khởi tạo!");
+            return list;
+        }
         String sql = "SELECT b.id, b.bookDate, b.bookTime, b.quantity, b.status, " +
-                     "c.id AS cid, c.name AS cname, c.phone AS cphone, " +
-                     "u.id AS uid, u.name AS uname " +
-                     "FROM tblBooking b " +
-                     "JOIN tblClient c ON b.tblClientId = c.id " +
-                     "LEFT JOIN tblUser u ON b.tblUserId = u.id " +
-                     "WHERE b.bookDate BETWEEN ? AND ? ORDER BY b.bookDate ASC";
+                      "c.id AS cid, c.name AS cname, c.phone AS cphone, " +
+                      "u.id AS uid, u.name AS uname " +
+                      "FROM tblBooking b " +
+                      "JOIN tblClient c ON b.tblClientId = c.id " +
+                      "LEFT JOIN tblUser u ON b.tblUserId = u.id " +
+                      "WHERE b.bookDate BETWEEN ? AND ? ORDER BY b.bookDate ASC";
         try {
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, startDate);
@@ -155,7 +174,7 @@ public class BookingDAO extends DAO {
 
                 list.add(b);
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return list;

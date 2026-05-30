@@ -1,22 +1,20 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package model;
+
 import java.io.Serializable;
-/**
- *
- * @author annguyen
- */
+import java.time.LocalDateTime;
 
 public class User implements Serializable {
     private int id;
+    private String userCode;
     private String username;
     private String password;
     private String name;
     private String role;
     private String phone;
     private String email;
+    private String status;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public User() {
         super();
@@ -24,6 +22,9 @@ public class User implements Serializable {
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
+
+    public String getUserCode() { return userCode; }
+    public void setUserCode(String userCode) { this.userCode = userCode; }
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
@@ -34,6 +35,9 @@ public class User implements Serializable {
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
+    public String getFullName() { return name; }
+    public void setFullName(String fullName) { this.name = fullName; }
+
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
 
@@ -42,4 +46,13 @@ public class User implements Serializable {
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }
