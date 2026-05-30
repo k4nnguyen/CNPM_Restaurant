@@ -16,10 +16,12 @@ public class Order implements Serializable {
     private Table table;
     private User user;
     private ArrayList<OrderItem> orderItems;
+    private ArrayList<OrderDish> orderDishes;
 
     public Order() {
         super();
         orderItems = new ArrayList<>();
+        orderDishes = new ArrayList<>();
     }
 
     public int getId() { return id; }
@@ -40,17 +42,44 @@ public class Order implements Serializable {
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
 
+    // Hỗ trợ OrderItem (dành cho module của Lam)
     public ArrayList<OrderItem> getOrderItems() { return orderItems; }
     public void setOrderItems(ArrayList<OrderItem> orderItems) { this.orderItems = orderItems; }
+
+    // Hỗ trợ OrderDish (dành cho module của Khanh)
+    public ArrayList<OrderDish> getOrderDishes() { return orderDishes; }
+    public void setOrderDishes(ArrayList<OrderDish> orderDishes) { this.orderDishes = orderDishes; }
+
+    public void addOrderDish(OrderDish od) {
+        if (orderDishes == null) {
+            orderDishes = new ArrayList<>();
+        }
+        orderDishes.add(od);
+
+        // Đồng bộ sang orderItems để đảm bảo tính thống nhất dữ liệu
+        if (orderItems == null) {
+            orderItems = new ArrayList<>();
+        }
+        OrderItem item = new OrderItem();
+        item.setDish(od.getDish());
+        item.setQuantity(od.getQuantity());
+        item.setUnitPrice(od.getCurrentPrice());
+        item.setTemporaryAmount(od.getQuantity() * od.getCurrentPrice());
+        orderItems.add(item);
+
+        recalculateTotal();
+    }
 
     /**
      * Tính lại tổng tiền dựa trên danh sách các món đã gọi.
      */
     public void recalculateTotal() {
         double total = 0;
-        for (OrderItem item : orderItems) {
-            item.setTemporaryAmount(item.getQuantity() * item.getUnitPrice());
-            total += item.getTemporaryAmount();
+        if (orderItems != null) {
+            for (OrderItem item : orderItems) {
+                item.setTemporaryAmount(item.getQuantity() * item.getUnitPrice());
+                total += item.getTemporaryAmount();
+            }
         }
         this.totalAmount = total;
     }
