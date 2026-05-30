@@ -77,9 +77,14 @@ public class DAO {
         if (overrideUrl != null) {
             candidateUrls.add(overrideUrl);
         }
-        candidateUrls.add("jdbc:sqlserver://localhost;databaseName=restaurant_db;encrypt=true;trustServerCertificate=true;");
-        candidateUrls.add("jdbc:sqlserver://localhost:1433;databaseName=restaurant_db;encrypt=true;trustServerCertificate=true;");
-        candidateUrls.add("jdbc:sqlserver://localhost;instanceName=SQLEXPRESS;databaseName=restaurant_db;encrypt=true;trustServerCertificate=true;");
+        candidateUrls.add("jdbc:sqlserver://localhost;databaseName=restaurant_db;encrypt=true;trustServerCertificate=true;loginTimeout=2;");
+        candidateUrls.add("jdbc:sqlserver://localhost:1433;databaseName=restaurant_db;encrypt=true;trustServerCertificate=true;loginTimeout=2;");
+        candidateUrls.add("jdbc:sqlserver://localhost;instanceName=SQLEXPRESS;databaseName=restaurant_db;encrypt=true;trustServerCertificate=true;loginTimeout=2;");
+
+        try {
+            DriverManager.setLoginTimeout(2);
+        } catch (Exception ignored) {
+        }
 
         SQLException lastException = null;
         for (String candidateUrl : candidateUrls) {
