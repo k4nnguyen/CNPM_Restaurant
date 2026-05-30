@@ -3,13 +3,16 @@ package model;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+/**
+ * Lớp thực thể đại diện cho người dùng hệ thống (nhân viên / quản lý).
+ */
 public class User implements Serializable {
     private int id;
     private String userCode;
     private String username;
     private String password;
-    private String name;
-    private String role;
+    private String fullName;
+    private String role; // "STAFF" hoặc "MANAGER"
     private String phone;
     private String email;
     private String status;
@@ -18,6 +21,13 @@ public class User implements Serializable {
 
     public User() {
         super();
+    }
+
+    public User(int id, String username, String fullName, String role) {
+        this.id = id;
+        this.username = username;
+        this.fullName = fullName;
+        this.role = role;
     }
 
     public int getId() { return id; }
@@ -32,11 +42,12 @@ public class User implements Serializable {
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    // Hỗ trợ cả getName và getFullName để tương thích với tất cả các nhánh
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
 
-    public String getFullName() { return name; }
-    public void setFullName(String fullName) { this.name = fullName; }
+    public String getName() { return fullName; }
+    public void setName(String name) { this.fullName = name; }
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
@@ -55,4 +66,9 @@ public class User implements Serializable {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    @Override
+    public String toString() {
+        return "User{id=" + id + ", username='" + username + "', fullName='" + fullName + "', role='" + role + "'}";
+    }
 }
