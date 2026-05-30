@@ -24,6 +24,7 @@ public class DishStatDAO extends DAO {
      */
     public ArrayList<DishStat> getBestSellingDish(String startDate, String endDate) {
         ArrayList<DishStat> list = new ArrayList<>();
+        if (con == null) return list;
         String sql = "SELECT d.id, d.dishCode, d.name, d.category, d.price, "
                 + "SUM(oi.quantity) AS totalQuantity, "
                 + "SUM(oi.quantity * oi.unitPrice) AS totalRevenue "
@@ -64,6 +65,7 @@ public class DishStatDAO extends DAO {
      * @return Tổng doanh thu, hoặc 0.0 nếu không có dữ liệu.
      */
     public double getTotalRevenue(String startDate, String endDate) {
+        if (con == null) return 0.0;
         String sql = "SELECT SUM(totalAmount) AS totalRevenue FROM tblBill "
                 + "WHERE createdTime >= ? AND createdTime <= ?";
         try {

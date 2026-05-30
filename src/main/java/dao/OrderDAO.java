@@ -22,6 +22,7 @@ public class OrderDAO extends DAO {
      * @return Đối tượng Order đầy đủ, hoặc null nếu không tìm thấy.
      */
     public Order getOrderDetail(int tableId) {
+        if (con == null) return null;
         Order order = null;
         String sqlOrder = "SELECT * FROM tblOrder WHERE tblTableId = ? AND status = N'Chưa thanh toán'";
         String sqlOrderItem = "SELECT oi.*, d.dishCode, d.name, d.category, d.price "
@@ -79,6 +80,7 @@ public class OrderDAO extends DAO {
      */
     public ArrayList<Order> getAllUnpaidOrders() {
         ArrayList<Order> list = new ArrayList<>();
+        if (con == null) return list;
         String sql = "SELECT o.*, t.tableCode, t.name AS tableName "
                 + "FROM tblOrder o JOIN tblTable t ON o.tblTableId = t.id "
                 + "WHERE o.status = N'Chưa thanh toán' ORDER BY o.orderTime";
@@ -113,6 +115,7 @@ public class OrderDAO extends DAO {
      * @return true nếu cập nhật thành công.
      */
     public boolean updateOrderStatus(int orderId, String status) {
+        if (con == null) return false;
         String sql = "UPDATE tblOrder SET status = ? WHERE id = ?";
         try {
             PreparedStatement ps = con.prepareStatement(sql);

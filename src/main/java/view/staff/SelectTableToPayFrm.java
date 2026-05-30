@@ -93,6 +93,14 @@ public class SelectTableToPayFrm extends JFrame implements ActionListener {
 
     private void loadData() {
         tableModel.setRowCount(0);
+        // Kiểm tra kết nối CSDL trước khi truy vấn
+        if (dao.DAO.con == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Không thể kết nối cơ sở dữ liệu.\nVui lòng kiểm tra SQL Server đang chạy và thử lại.",
+                    "Lỗi kết nối", JOptionPane.ERROR_MESSAGE);
+            btnSelect.setEnabled(false);
+            return;
+        }
         TableDAO dao = new TableDAO();
         listTable = dao.getServingTables();
         if (listTable.isEmpty()) {
