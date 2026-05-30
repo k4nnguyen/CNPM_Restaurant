@@ -168,6 +168,9 @@ public class DAO {
             statement.execute("IF OBJECT_ID(N'tblClient', N'U') IS NOT NULL AND COL_LENGTH('tblClient', 'status') IS NULL "
                     + "ALTER TABLE tblClient ADD status NVARCHAR(20) NOT NULL CONSTRAINT DF_tblClient_status DEFAULT N'ACTIVE'");
 
+            statement.execute("IF OBJECT_ID(N'tblUser', N'U') IS NOT NULL AND COL_LENGTH('tblUser', 'status') IS NULL "
+                    + "ALTER TABLE tblUser ADD status NVARCHAR(20) NOT NULL CONSTRAINT DF_tblUser_status DEFAULT N'ACTIVE'");
+
             statement.execute("IF OBJECT_ID(N'tblUser', N'U') IS NULL "
                     + "BEGIN "
                     + "CREATE TABLE tblUser ("
