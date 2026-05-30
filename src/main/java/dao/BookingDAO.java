@@ -118,4 +118,46 @@ public class BookingDAO extends DAO {
             return false;
         }
     }
+
+    // 4. Lấy danh sách đặt bàn theo khoảng ngày phục vụ thống kê (Module Quản lý)
+    public ArrayList<Booking> getBookingsByDateRange(String startDate, String endDate) {
+        ArrayList<Booking> list = new ArrayList<>();
+        String sql = "SELECT b.id, b.bookDate, b.bookTime, b.quantity, b.status, " +
+                     "c.id AS cid, c.name AS cname, c.phone AS cphone, " +
+                     "u.id AS uid, u.name AS uname " +
+                     "FROM tblBooking b " +
+                     "JOIN tblClient c ON b.tblClientId = c.id " +
+                     "LEFT JOIN tblUser u ON b.tblUserId = u.id " +
+                     "WHERE b.bookDate BETWEEN ? AND ? ORDER BY b.bookDate ASC";
+        try {
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setString(1, startDate);
+            ps.setString(2, endDate);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Booking b = new Booking();
+                b.setId(rs.getInt("id"));
+                b.setBookDate(rs.getDate("bookDate"));
+                b.setBookTime(rs.getString("bookTime"));
+                b.setQuantity(rs.getInt("quantity"));
+                b.setStatus(rs.getString("status"));
+
+                Client c = new Client();
+                c.setId(rs.getInt("cid"));
+                c.setName(rs.getString("cname"));
+                c.setPhone(rs.getString("cphone"));
+                b.setClient(c);
+
+                User u = new User();
+                u.setId(rs.getInt("uid"));
+                u.setName(rs.getString("uname"));
+                b.setUser(u);
+
+                list.add(b);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 }
