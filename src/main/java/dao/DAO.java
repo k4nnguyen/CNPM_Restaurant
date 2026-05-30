@@ -27,8 +27,18 @@ public class DAO {
 
             try {
                 Class.forName(dbClass);
-                con = DriverManager.getConnection(dbUrl, username, password);
-                System.out.println("Kết nối SQL Server (SQLEXPRESS) thành công!");
+                // Giới hạn thời gian chờ kết nối là 3 giây để tránh treo ứng dụng
+                DriverManager.setLoginTimeout(3);
+                try {
+                    con = DriverManager.getConnection(dbUrl, username, password);
+                    System.out.println("Kết nối SQL Server (SQLEXPRESS) thành công!");
+                } catch (SQLException sqle) {
+                    System.out.println("SQLEXPRESS không phản hồi, đang thử kết nối qua Default Instance...");
+                    // Thử phương án dự phòng: Kết nối qua Default Instance (MSSQLSERVER) đang chạy trên máy bạn
+                    String fallbackUrl = "jdbc:sqlserver://localhost;databaseName=restaurant_db;encrypt=true;trustServerCertificate=true;";
+                    con = DriverManager.getConnection(fallbackUrl, username, password);
+                    System.out.println("Kết nối SQL Server (Default Instance - MSSQLSERVER) thành công!");
+                }
             } catch (ClassNotFoundException | SQLException e) {
                 System.out.println("Lỗi kết nối CSDL: " + e.getMessage());
             }
