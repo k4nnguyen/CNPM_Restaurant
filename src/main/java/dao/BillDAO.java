@@ -2,28 +2,29 @@ package dao;
 
 import model.*;
 import java.sql.*;
+import java.util.ArrayList;
 
 /**
- * DAO xử lý việc tạo hóa đơn thanh toán.
- * Sử dụng transaction để đảm bảo tính toàn vẹn dữ liệu:
- * - Ghi hóa đơn vào tblBill
- * - Cập nhật trạng thái tblOrder sang "Đã thanh toán"
+ * DAO xử lý việc tạo hóa đơn thanh toán và thống kê hóa đơn.
  */
 public class BillDAO extends DAO {
-
     public BillDAO() {
         super();
     }
 
+    /**
+     * Tạo hóa đơn mới và cập nhật trạng thái đơn đặt món.
+     * Thực hiện trong một transaction để đảm bảo tính nhất quán dữ liệu.
+     *
+     * @param bill Đối tượng Bill cần lưu vào CSDL.
+     * @return true nếu tạo hóa đơn thành công, false nếu có lỗi.
+     */
     public boolean createBill(Bill bill) {
         if (con == null) return false;
         boolean result = false;
-        
-        // FIX 1: Đảm bảo tên cột createTime ở đây khớp 100% với SQL Server
-        String sqlBill = "INSERT INTO tblBill(createTime, totalAmount, paymentMethod, tblOrderID, tblUserID) "
+        String sqlBill = "INSERT INTO tblBill(createdTime, totalAmount, paymentMethod, tblOrderId, tblUserId) "
                 + "VALUES(?,?,?,?,?)";
-        String sqlUpdateOrder = "UPDATE tblOrder SET isPaid = 1 WHERE id = ?";
-        
+        String sqlUpdateOrder = "UPDATE tblOrder SET status = N'Đã thanh toán' WHERE id = ?";
         try {
             con.setAutoCommit(false);
 
@@ -66,40 +67,169 @@ public class BillDAO extends DAO {
         return result;
     }
 
+    /**
+     * Lấy hóa đơn theo ID.
+     *
+     * @param billId ID của hóa đơn cần tìm.
+     * @return Đối tượng Bill nếu tìm thấy, null nếu không.
+     */
     public Bill getBillById(int billId) {
         if (con == null) return null;
-        
-        // FIX 2: Sửa u.fullName thành u.name cho khớp với CSDL của An
-        String sql = "SELECT b.*, u.name AS staffName FROM tblBill b "
+        String sql = "SELECT b.*, u.fullName AS staffName FROM tblBill b "
                 + "JOIN tblUser u ON b.tblUserId = u.id WHERE b.id = ?";
         try {
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setInt(1, billId);
             ResultSet rs = ps.executeQuery();
-            
             if (rs.next()) {
                 Bill bill = new Bill();
                 bill.setId(rs.getInt("id"));
-                
-                // FIX 1 (tiếp): Đổi thành createTime cho đồng bộ với câu INSERT ở trên
-                bill.setCreatedTime(rs.getTimestamp("createTime"));
+                bill.setCreatedTime(rs.getTimestamp("createdTime"));
                 bill.setTotalAmount(rs.getDouble("totalAmount"));
                 bill.setPaymentMethod(rs.getString("paymentMethod"));
 
                 User user = new User();
                 user.setId(rs.getInt("tblUserId"));
-                user.setName(rs.getString("staffName"));
+                user.setFullName(rs.getString("staffName"));
                 bill.setUser(user);
 
                 Order order = new Order();
                 order.setId(rs.getInt("tblOrderId"));
                 bill.setOrder(order);
-                
                 return bill;
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    // --- CÁC PHƯƠNG THỨC THỐNG KÊ (MANAGER MODULE) ---
+
+    public ArrayList<Bill> getBillsByDateRange(String startDate, String endDate) {
+        ArrayList<Bill> list = new ArrayList<>();
+        if (con == null) {
+            System.err.println("Lỗi: Kết nối CSDL chưa được khởi tạo!");
+            return list;
+        }
+        String sql = "SELECT bl.id, bl.paymentDate, bl.paymentTime, bl.totalAmount, " +
+                     "b.id AS bid, b.bookDate, b.bookTime, b.quantity, b.status " +
+                     "FROM tblBill bl " +
+                     "JOIN tblBooking b ON bl.tblBookingId = b.id " +
+                     "WHERE bl.paymentDate BETWEEN ? AND ? ORDER BY bl.paymentDate ASC";
+        try {
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setString(1, startDate);
+            ps.setString(2, endDate);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Bill bl = new Bill();
+                bl.setId(rs.getInt("id"));
+                bl.setPaymentDate(rs.getDate("paymentDate"));
+                bl.setPaymentTime(rs.getString("paymentTime"));
+                bl.setTotalAmount(rs.getDouble("totalAmount"));
+
+                Booking b = new Booking();
+                b.setId(rs.getInt("bid"));
+                b.setBookDate(rs.getDate("bookDate"));
+                b.setBookTime(rs.getString("bookTime"));
+                b.setQuantity(rs.getInt("quantity"));
+                b.setStatus(rs.getString("status"));
+                bl.setBooking(b);
+
+                list.add(bl);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public ArrayList<Bill> getBillsByTimeFrame(String timeFrame, String startDate, String endDate) {
+        ArrayList<Bill> list = new ArrayList<>();
+        if (con == null) {
+            System.err.println("Lỗi: Kết nối CSDL chưa được khởi tạo!");
+            return list;
+        }
+        String sql = "SELECT bl.id, bl.paymentDate, bl.paymentTime, bl.totalAmount, " +
+                     "b.id AS bid, b.bookDate, b.bookTime, b.quantity, b.status " +
+                     "FROM tblBill bl " +
+                     "JOIN tblBooking b ON bl.tblBookingId = b.id " +
+                     "WHERE bl.paymentDate BETWEEN ? AND ? ";
+        
+        if (timeFrame.equals("11:00-13:00")) {
+            sql += "AND bl.paymentTime BETWEEN '11:00:00' AND '13:00:00' ";
+        } else if (timeFrame.equals("18:00-20:00")) {
+            sql += "AND bl.paymentTime BETWEEN '18:00:00' AND '20:00:00' ";
+        } else {
+            sql += "AND bl.paymentTime NOT BETWEEN '11:00:00' AND '13:00:00' AND bl.paymentTime NOT BETWEEN '18:00:00' AND '20:00:00' ";
+        }
+        sql += "ORDER BY bl.paymentDate ASC, bl.paymentTime ASC";
+        try {
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setString(1, startDate);
+            ps.setString(2, endDate);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Bill bl = new Bill();
+                bl.setId(rs.getInt("id"));
+                bl.setPaymentDate(rs.getDate("paymentDate"));
+                bl.setPaymentTime(rs.getString("paymentTime"));
+                bl.setTotalAmount(rs.getDouble("totalAmount"));
+
+                Booking b = new Booking();
+                b.setId(rs.getInt("bid"));
+                b.setBookDate(rs.getDate("bookDate"));
+                b.setBookTime(rs.getString("bookTime"));
+                b.setQuantity(rs.getInt("quantity"));
+                b.setStatus(rs.getString("status"));
+                bl.setBooking(b);
+
+                list.add(bl);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public ArrayList<Bill> getBillsByMonth(int month, int year) {
+        ArrayList<Bill> list = new ArrayList<>();
+        if (con == null) {
+            System.err.println("Lỗi: Kết nối CSDL chưa được khởi tạo!");
+            return list;
+        }
+        String sql = "SELECT bl.id, bl.paymentDate, bl.paymentTime, bl.totalAmount, " +
+                     "b.id AS bid, b.bookDate, b.bookTime, b.quantity, b.status " +
+                     "FROM tblBill bl " +
+                     "JOIN tblBooking b ON bl.tblBookingId = b.id " +
+                     "WHERE MONTH(bl.paymentDate) = ? AND YEAR(bl.paymentDate) = ? " +
+                     "ORDER BY bl.paymentDate ASC";
+        try {
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setInt(1, month);
+            ps.setInt(2, year);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Bill bl = new Bill();
+                bl.setId(rs.getInt("id"));
+                bl.setPaymentDate(rs.getDate("paymentDate"));
+                bl.setPaymentTime(rs.getString("paymentTime"));
+                bl.setTotalAmount(rs.getDouble("totalAmount"));
+
+                Booking b = new Booking();
+                b.setId(rs.getInt("bid"));
+                b.setBookDate(rs.getDate("bookDate"));
+                b.setBookTime(rs.getString("bookTime"));
+                b.setQuantity(rs.getInt("quantity"));
+                b.setStatus(rs.getString("status"));
+                bl.setBooking(b);
+
+                list.add(bl);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 }

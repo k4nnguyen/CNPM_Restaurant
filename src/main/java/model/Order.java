@@ -1,14 +1,12 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package model;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
+
 /**
- *
- * @author annguyen
+ * Lớp thực thể đại diện cho đơn đặt món (order) tại bàn.
+ * Mỗi Order gắn với một Table và một User (nhân viên phục vụ).
  */
 public class Order implements Serializable {
     public static final String STATUS_UNPAID = "Chưa thanh toán";
@@ -17,18 +15,16 @@ public class Order implements Serializable {
     private int id;
     private Date orderTime;
     private double totalAmount;
-    private String status;
-    private User user;
+    private String status; // "Chưa thanh toán", "Đã thanh toán"
     private Table table;
+    private User user;
+    private ArrayList<OrderItem> orderItems;
     private ArrayList<OrderDish> orderDishes;
 
     public Order() {
         super();
-        this.orderDishes = new ArrayList<OrderDish>();
-    }
-
-    public void addOrderDish(OrderDish od) {
-        this.orderDishes.add(od);
+        orderItems = new ArrayList<>();
+        orderDishes = new ArrayList<>();
     }
 
     public int getId() { return id; }
@@ -43,31 +39,54 @@ public class Order implements Serializable {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
-
     public Table getTable() { return table; }
     public void setTable(Table table) { this.table = table; }
 
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+
+    // Hỗ trợ OrderItem (dành cho module của Lam)
+    public ArrayList<OrderItem> getOrderItems() { return orderItems; }
+    public void setOrderItems(ArrayList<OrderItem> orderItems) { this.orderItems = orderItems; }
+
+    // Hỗ trợ OrderDish (dành cho module của Khanh)
     public ArrayList<OrderDish> getOrderDishes() { return orderDishes; }
     public void setOrderDishes(ArrayList<OrderDish> orderDishes) { this.orderDishes = orderDishes; }
-    
+
+    public void addOrderDish(OrderDish od) {
+        if (orderDishes == null) {
+            orderDishes = new ArrayList<>();
+        }
+        orderDishes.add(od);
+
+        // Đồng bộ sang orderItems để đảm bảo tính thống nhất dữ liệu
+        if (orderItems == null) {
+            orderItems = new ArrayList<>();
+        }
+        OrderItem item = new OrderItem();
+        item.setDish(od.getDish());
+        item.setQuantity(od.getQuantity());
+        item.setUnitPrice(od.getCurrentPrice());
+        item.setTemporaryAmount(od.getQuantity() * od.getCurrentPrice());
+        orderItems.add(item);
+
+        recalculateTotal();
+    }
+
     /**
      * Tính lại tổng tiền dựa trên danh sách các món đã gọi.
-     * (Đã sửa đổi logic để tương thích với class OrderDish)
      */
     public void recalculateTotal() {
         double total = 0;
-        for (OrderDish od : orderDishes) {
-            double subTotal = od.getQuantity() * od.getCurrentPrice();
-            total += subTotal;
+        if (orderItems != null) {
+            for (OrderItem item : orderItems) {
+                item.setTemporaryAmount(item.getQuantity() * item.getUnitPrice());
+                total += item.getTemporaryAmount();
+            }
         }
         this.totalAmount = total;
     }
 
-    /**
-     * Hỗ trợ in nhanh thông tin Hóa đơn ra màn hình Console để Debug
-     */
     @Override
     public String toString() {
         return "Order{id=" + id + ", table=" + (table != null ? table.getTableCode() : "N/A")

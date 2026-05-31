@@ -1,29 +1,28 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package view.staff;
+
 import model.User;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+
 /**
- *
- * @author annguyen
+ * Màn hình chính của Nhân viên phục vụ.
+ * Cung cấp đầy đủ các chức năng: Đặt bàn, Sửa đặt bàn, Gọi món và Thanh toán.
  */
 public class StaffHomeFrm extends JFrame implements ActionListener {
     private User user;
     private JButton btnBookTable;
     private JButton btnEditBooking;
     private JButton btnOrderDish;
-    private JButton btnPayment; // Thêm biến cho nút Payment
+    private JButton btnPayment; 
+    private JButton btnLogout; // Thêm biến cho nút Logout
 
     public StaffHomeFrm(User user) {
-        super("Trang chủ Nhân viên phục vụ");
+        super("Trang chủ - Nhân viên phục vụ");
         this.user = user;
         
         // 1. Cài đặt thông số cơ bản cho Cửa sổ
-        this.setSize(600, 400);
+        this.setSize(600, 450); // Tăng chút chiều cao tổng thể của cửa sổ cho thoáng
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setLocationRelativeTo(null); // Căn giữa màn hình
         
@@ -50,21 +49,26 @@ public class StaffHomeFrm extends JFrame implements ActionListener {
         headerPanel.add(lblWelcome, BorderLayout.EAST);
         
         // 4. Tạo phần chứa các nút bấm (Center)
-        // Đổi lưới thành 4 hàng (thay vì 3) để chứa thêm nút Payment
-        JPanel btnPanel = new JPanel(new GridLayout(4, 1, 0, 25)); 
+        // Đổi lưới thành 5 hàng để chứa thêm nút Logout
+        JPanel btnPanel = new JPanel(new GridLayout(5, 1, 0, 20)); 
         btnPanel.setOpaque(false);
-        // Tăng chiều cao Dimension từ 200 lên 260 để nút không bị lùn đi
-        btnPanel.setPreferredSize(new Dimension(300, 260)); 
+        // Tăng chiều cao Dimension lên 320 để các nút không bị ép lùn lại
+        btnPanel.setPreferredSize(new Dimension(300, 320)); 
         
         btnBookTable = createButton("Book a table");
         btnEditBooking = createButton("Edit a booking");
         btnOrderDish = createButton("Order dishes");
-        btnPayment = createButton("Payment"); // Khởi tạo nút Payment
+        btnPayment = createButton("Payment"); 
+        btnLogout = createButton("Logout"); // Khởi tạo nút Logout
+        
+        // Đổi màu nút Logout cho khác biệt (tùy chọn)
+        btnLogout.setForeground(Color.RED);
         
         btnPanel.add(btnBookTable);
         btnPanel.add(btnEditBooking);
         btnPanel.add(btnOrderDish);
-        btnPanel.add(btnPayment); // Thêm nút Payment vào Panel
+        btnPanel.add(btnPayment); 
+        btnPanel.add(btnLogout); // Thêm nút Logout vào Panel
         
         // Dùng GridBagLayout để căn giữa btnPanel vào chính giữa màn hình mà không bị kéo giãn
         JPanel centerWrapper = new JPanel(new GridBagLayout());
@@ -89,25 +93,33 @@ public class StaffHomeFrm extends JFrame implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        // Xử lý chuyển trang tương ứng với từng nút bấm
         if (e.getSource().equals(btnBookTable)) {
             new SearchFreeTableFrm(user).setVisible(true);
             this.dispose(); 
         } 
         else if (e.getSource().equals(btnEditBooking)) {
-            // Chuyển sang module Sửa đặt bàn
             new view.staff.SearchBookingFrm(user).setVisible(true);
             this.dispose();
         } 
         else if (e.getSource().equals(btnOrderDish)) {
-            // Chuyển sang module Gọi món
             new view.staff.SelectTableFrm(user).setVisible(true);
             this.dispose();
         }
-        else if (e.getSource().equals(btnPayment)) { // Sự kiện cho nút Payment
-            // Chuyển sang module Thanh toán
+        else if (e.getSource().equals(btnPayment)) {
             new view.staff.SelectTableToPayFrm(user).setVisible(true);
             this.dispose();
+        }
+        else if (e.getSource().equals(btnLogout)) { // Sự kiện cho nút Logout
+            int confirm = JOptionPane.showConfirmDialog(this, 
+                    "Bạn có chắc chắn muốn đăng xuất?", 
+                    "Xác nhận", JOptionPane.YES_NO_OPTION);
+            
+            if (confirm == JOptionPane.YES_OPTION) {
+                // Mở lại form LoginFrame của Manager
+                new view.manager.LoginFrame().setVisible(true);
+                // Đóng form hiện tại
+                this.dispose();
+            }
         }
     }
 
@@ -116,17 +128,15 @@ public class StaffHomeFrm extends JFrame implements ActionListener {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                // Khởi tạo đối tượng User và set dữ liệu khớp 100% với record trong CSDL
                 User dummyUser = new User();
                 dummyUser.setId(1);
                 dummyUser.setName("Nguyễn Kim An");
                 dummyUser.setUsername("staff01");
                 dummyUser.setPassword("123");
-                dummyUser.setRole("nhanvien");
+                dummyUser.setRole("STAFF");
                 dummyUser.setPhone("0123456789");
                 dummyUser.setEmail("annguyen@gmail.com");
 
-                // Truyền user vào form và hiển thị
                 new StaffHomeFrm(dummyUser).setVisible(true);
             }
         });
