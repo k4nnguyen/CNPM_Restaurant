@@ -246,8 +246,10 @@ public class DAO {
         String sql = "INSERT INTO tblUser(userCode, username, password, name, role, phone, email, status) "
                 + "VALUES(?,?,?,?,?,?,?,?)";
         try (PreparedStatement statement = con.prepareStatement(sql)) {
-            addUserSeed(statement, "NV001", "admin", "123456", "System Manager", "MANAGER", "0911000001", "admin@restaurant.local");
-            addUserSeed(statement, "NV002", "staff01", "123456", "Floor Staff One", "STAFF", "0911000002", "staff01@restaurant.local");
+            addUserSeed(statement, "NV000", "admin", "123456", "System Manager", "MANAGER", "0911000001", "admin@restaurant.local");
+            addUserSeed(statement, "NV001", "staff01", "123", "Nguyễn Kim An", "STAFF", "0123456789", "annguyen@gmail.com");
+            addUserSeed(statement, "NV002", "staff02", "123", "Trần Minh Tuấn", "STAFF", "0987654321", "tuan.tran@gmail.com");
+            addUserSeed(statement, "NV003", "staff03", "123", "Lê Hải Yến", "STAFF", "0911222333", "yen.le@gmail.com");
             statement.executeBatch();
         }
     }
