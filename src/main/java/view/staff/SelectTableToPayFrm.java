@@ -131,17 +131,24 @@ public class SelectTableToPayFrm extends JFrame implements ActionListener {
                 return;
             }
             Table selectedTable = listTable.get(row);
-            // Tải Order từ CSDL rồi truyền vào BillDetailFrm(user, order) theo đúng thiết kế CE02
+            
+            // Tải Order từ CSDL
             OrderDAO orderDAO = new OrderDAO();
             Order order = orderDAO.getOrderDetail(selectedTable.getId());
+            
             if (order == null) {
                 JOptionPane.showMessageDialog(this,
                         "Bàn " + selectedTable.getTableCode() + " chưa có đơn đặt món nào chưa thanh toán.",
                         "Thông báo", JOptionPane.WARNING_MESSAGE);
                 return;
             }
+            
+            order.setTable(selectedTable);
+            
+            // Mở BillDetailFrm(user, order) theo đúng thiết kế CE02
             new BillDetailFrm(user, order).setVisible(true);
             this.dispose();
+            
         } else if (e.getSource().equals(btnRefresh)) {
             loadData();
         } else if (e.getSource().equals(btnBack)) {

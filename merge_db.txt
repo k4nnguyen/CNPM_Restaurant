@@ -1,0 +1,63 @@
+USE restaurant_db;
+GO
+
+-- 1. Vá bảng Khách hàng & Nhân viên (Thêm trạng thái xóa mềm)
+IF COL_LENGTH('tblClient', 'status') IS NULL
+    ALTER TABLE tblClient ADD status NVARCHAR(20) NOT NULL DEFAULT 'ACTIVE';
+GO
+
+IF COL_LENGTH('tblUser', 'status') IS NULL
+    ALTER TABLE tblUser ADD status NVARCHAR(20) NOT NULL DEFAULT 'ACTIVE';
+GO
+
+IF COL_LENGTH('tblUser', 'userCode') IS NULL
+    ALTER TABLE tblUser ADD userCode NVARCHAR(20) NULL;
+GO
+
+-- 2. Vá bảng Bàn ăn (Giữ lại cột 'name' của bạn, thêm 'isActive' của Lam)
+IF COL_LENGTH('tblTable', 'isActive') IS NULL
+    ALTER TABLE tblTable ADD isActive BIT NOT NULL DEFAULT 1;
+GO
+
+-- 3. Vá bảng Món ăn (Fix lỗi crash và thêm 'isActive')
+IF COL_LENGTH('tblDish', 'status') IS NULL
+    ALTER TABLE tblDish ADD status NVARCHAR(50) NOT NULL DEFAULT N'Đang bán';
+GO
+
+IF COL_LENGTH('tblDish', 'isActive') IS NULL
+    ALTER TABLE tblDish ADD isActive BIT NOT NULL DEFAULT 1;
+GO
+
+-- 4. Vá bảng Hóa đơn Gọi món (Hòa trộn 'isPaid' của bạn và 'totalAmount' của Lam)
+IF COL_LENGTH('tblOrder', 'totalAmount') IS NULL
+    ALTER TABLE tblOrder ADD totalAmount FLOAT NOT NULL DEFAULT 0;
+GO
+
+IF COL_LENGTH('tblOrder', 'status') IS NULL
+    ALTER TABLE tblOrder ADD status NVARCHAR(50) NOT NULL DEFAULT N'Chưa thanh toán';
+GO
+
+-- 5. Vá bảng Chi tiết đặt bàn (Đổi INT sang BIT cho chuẩn Java boolean)
+-- Dùng INFORMATION_SCHEMA.COLUMNS để check kiểu dữ liệu thay vì hàm ảo
+IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS 
+           WHERE TABLE_NAME = 'tblBookedTable' 
+             AND COLUMN_NAME = 'isCheckedin' 
+             AND DATA_TYPE = 'int')
+BEGIN
+    ALTER TABLE tblBookedTable ALTER COLUMN isCheckedin BIT;
+END
+GO
+
+-- 6. TẠO BẢNG MỚI: tblBill (Dành cho luồng thanh toán)
+IF OBJECT_ID('tblBill', 'U') IS NULL
+BEGIN
+    CREATE TABLE tblBill (
+        ID INT IDENTITY(1,1) PRIMARY KEY,
+        createTime DATETIME NOT NULL DEFAULT GETDATE(),
+        totalAmount FLOAT NOT NULL,
+        paymentMethod NVARCHAR(50) NOT NULL,
+        tblOrderID INT NOT NULL FOREIGN KEY REFERENCES tblOrder(ID),
+        tblUserID INT NOT NULL FOREIGN KEY REFERENCES tblUser(ID)
+    );
+END
+GO
