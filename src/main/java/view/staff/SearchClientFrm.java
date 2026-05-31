@@ -17,17 +17,17 @@ import java.util.ArrayList;
  */
 public class SearchClientFrm extends JFrame implements ActionListener {
     private User user;
-    private Booking tmpBooking;
+    
     private JTextField txtClientName, txtClientPhone;
     private JButton btnSearch, btnAddClient, btnBack;
     private JTable tblClient;
     private DefaultTableModel tableModel;
     private ArrayList<Client> listClient;
 
-    public SearchClientFrm(User user, Booking tmpBooking) {
+    public SearchClientFrm(User user) {
         super("Search Client");
         this.user = user;
-        this.tmpBooking = tmpBooking;
+        
         this.setSize(600, 450);
         this.setLocationRelativeTo(null);
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -99,7 +99,7 @@ public class SearchClientFrm extends JFrame implements ActionListener {
         btnAddClient.addActionListener(this);
         
         btnBack.addActionListener(e -> {
-            new SearchFreeTableFrm(this.user).setVisible(true); // Quay lại trang chủ nhân viên
+            new StaffHomeFrm(this.user).setVisible(true); // Quay lại trang chủ nhân viên
             this.dispose(); // Đóng form hiện tại
         });
         
@@ -146,7 +146,7 @@ public class SearchClientFrm extends JFrame implements ActionListener {
             }
         } 
         else if (e.getSource().equals(btnAddClient)) {
-            new AddClientFrm(user, tmpBooking).setVisible(true);
+            new AddClientFrm(user).setVisible(true);
             this.dispose();
         }
     }
@@ -155,8 +155,7 @@ public class SearchClientFrm extends JFrame implements ActionListener {
         int row = tblClient.getSelectedRow();
         if (row >= 0) {
             Client selectedClient = listClient.get(row);
-            tmpBooking.setClient(selectedClient);
-            new ConfirmBookingFrm(user, tmpBooking).setVisible(true);
+            JOptionPane.showMessageDialog(this, "Chon khach hang: " + selectedClient.getName());
             this.dispose(); 
         }
     }
@@ -172,8 +171,9 @@ public class SearchClientFrm extends JFrame implements ActionListener {
                 Booking dummyBooking = new Booking(); // Phiếu đặt bàn ảo
                 
                 // 2. Gọi form
-                new SearchClientFrm(dummyUser, dummyBooking).setVisible(true);
+                new SearchClientFrm(dummyUser).setVisible(true);
             }
         });
     }
 }
+

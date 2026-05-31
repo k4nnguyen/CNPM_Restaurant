@@ -27,9 +27,9 @@ public class DishStatDAO extends DAO {
         if (con == null) return list;
         String sql = "SELECT d.id, d.dishCode, d.name, d.category, d.price, "
                 + "SUM(oi.quantity) AS totalQuantity, "
-                + "SUM(oi.quantity * oi.unitPrice) AS totalRevenue "
+                + "SUM(oi.quantity * oi.currentPrice) AS totalRevenue "
                 + "FROM tblDish d "
-                + "JOIN tblOrderItem oi ON d.id = oi.tblDishId "
+                + "JOIN tblOrderDish oi ON d.id = oi.tblDishId "
                 + "JOIN tblOrder o ON oi.tblOrderId = o.id "
                 + "JOIN tblBill b ON o.id = b.tblOrderId "
                 + "WHERE b.createdTime >= ? AND b.createdTime <= ? "

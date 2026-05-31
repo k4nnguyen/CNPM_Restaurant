@@ -1,14 +1,12 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package model;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
+
 /**
- *
- * @author annguyen
+ * Lớp thực thể đại diện cho đơn đặt món (order) tại bàn.
+ * Mỗi Order gắn với một Table và một User (nhân viên phục vụ).
  */
 public class Order implements Serializable {
     public static final String STATUS_UNPAID = "Chưa thanh toán";
@@ -51,7 +49,7 @@ public class Order implements Serializable {
 
     public ArrayList<OrderDish> getOrderDishes() { return orderDishes; }
     public void setOrderDishes(ArrayList<OrderDish> orderDishes) { this.orderDishes = orderDishes; }
-    
+
     /**
      * Tính lại tổng tiền dựa trên danh sách các món đã gọi.
      * (Đã sửa đổi logic để tương thích với class OrderDish)

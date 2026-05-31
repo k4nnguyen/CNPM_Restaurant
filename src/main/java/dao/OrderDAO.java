@@ -15,10 +15,11 @@ public class OrderDAO extends DAO {
     // =================================================================
 
     public boolean addOrder(model.Order order) {
+        if (con == null) return false;
         boolean result = false;
         
         String sqlCheckActiveOrder = "SELECT id FROM tblOrder WHERE tblTableId = ? AND isPaid = 0";
-        String sqlCreateOrder = "INSERT INTO tblOrder(orderTime, tblUserId, tblTableId, isPaid) VALUES(?,?,?,0)";
+        String sqlCreateOrder = "INSERT INTO tblOrder(orderTime, tblUserId, tblTableId, isPaid, status) VALUES(?,?,?,0, N'Ch\u01b0a thanh to\u00e1n')";
         
         String sqlCheckDishExist = "SELECT quantity FROM tblOrderDish WHERE tblOrderId = ? AND tblDishId = ?";
         String sqlUpdateDish = "UPDATE tblOrderDish SET quantity = quantity + ? WHERE tblOrderId = ? AND tblDishId = ?";
@@ -136,7 +137,7 @@ public class OrderDAO extends DAO {
                     items.add(item);
                 }
                 order.setOrderDishes(items);
-                order.recalculateTotal(); // Gọi hàm tự tính tổng tiền vừa thêm ở model
+                order.recalculateTotal(); // Gọi hàm tự tính tổng tiền
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -176,14 +177,31 @@ public class OrderDAO extends DAO {
         return list;
     }
 
-    // Đổi trạng thái hóa đơn sang Đã thanh toán
+    // Đổi trạng thái hóa đơn sang Đã thanh toán (Nạp chồng 2 chữ ký để tương thích 100% với các nhánh khác)
     public boolean updateOrderStatus(int orderId) {
         if (con == null) return false;
-        // Đổi isPaid thành 1 thay vì update string
-        String sql = "UPDATE tblOrder SET isPaid = 1 WHERE id = ?";
+        // Đổi isPaid thành 1 và status thành 'Đã thanh toán' để đồng bộ
+        String sql = "UPDATE tblOrder SET isPaid = 1, status = N'\u0110\u00e3 thanh to\u00e1n' WHERE id = ?";
         try {
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setInt(1, orderId);
+            ps.executeUpdate();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean updateOrderStatus(int orderId, String status) {
+        if (con == null) return false;
+        int isPaidValue = ("\u0110\u00e3 thanh to\u00e1n".equalsIgnoreCase(status) || "Đã thanh toán".equalsIgnoreCase(status)) ? 1 : 0;
+        String sql = "UPDATE tblOrder SET isPaid = ?, status = ? WHERE id = ?";
+        try {
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setInt(1, isPaidValue);
+            ps.setString(2, status);
+            ps.setInt(3, orderId);
             ps.executeUpdate();
             return true;
         } catch (Exception e) {

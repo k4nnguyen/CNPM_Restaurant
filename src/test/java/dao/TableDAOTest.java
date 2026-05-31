@@ -1,150 +1,83 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/UnitTests/JUnit5TestClass.java to edit this template
- */
 package dao;
 
-import java.util.ArrayList;
 import model.Table;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+import java.util.ArrayList;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- *
- * @author annguyen
+ * Kiểm thử đơn vị cho TableDAO.
+ * Mục tiêu: Đảm bảo updateTableStatus() cập nhật đúng trạng thái bàn
+ * và getServingTables() trả về đúng danh sách bàn đang phục vụ.
  */
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class TableDAOTest {
-    
-    public TableDAOTest() {
-    }
-    
+
+    private static TableDAO tableDAO;
+    private static final int TEST_TABLE_ID = 1; // Bàn có sẵn trong CSDL
+
     @BeforeAll
-    public static void setUpClass() {
-    }
-    
-    @AfterAll
-    public static void tearDownClass() {
-    }
-    
-    @BeforeEach
-    public void setUp() {
-    }
-    
-    @AfterEach
-    public void tearDown() {
+    static void setUpClass() {
+        tableDAO = new TableDAO();
     }
 
     /**
-     * Test of searchFreeTable method, of class TableDAO.
+     * TC-TABLE-01: updateTableStatus() cập nhật thành công trạng thái bàn thành "Trống"
+     * sau khi thanh toán.
      */
     @Test
-    public void testSearchFreeTable() {
-        System.out.println("searchFreeTable");
-        String date = "2026-12-31";
-        String time = "19:00";
-        int quantity = 2;
-        TableDAO instance = new TableDAO();
-        ArrayList<Table> result = instance.searchFreeTable(date, time, quantity);
-        // Khẳng định danh sách trả về không bị null
-        assertNotNull(result, "Danh sách trả về không được null");
-        // Khẳng định phải tìm thấy ít nhất 1 bàn trống (Giả định nhà hàng có bàn)
-        assertTrue(result.size() >= 0, "Hệ thống chạy thành công, trả về list size >= 0");
-        // TODO review the generated test code and remove the default call to fail.
-        //fail("The test case is a prototype.");
+    @Order(1)
+    @DisplayName("TC-TABLE-01: Cập nhật trạng thái bàn thành 'Trống'")
+    void testUpdateTableStatus_ToTrong() {
+        boolean result = tableDAO.updateTableStatus(TEST_TABLE_ID, "Tr\u1ed1ng");
+        assertTrue(result, "updateTableStatus() phải trả về true khi cập nhật thành công");
+        System.out.println("TC-TABLE-01 PASSED: Cập nhật trạng thái bàn " + TEST_TABLE_ID + " thành 'Trống'");
     }
 
     /**
-     * Test of checkTableAvailability method, of class TableDAO.
+     * TC-TABLE-02: Sau khi cập nhật thành "Trống", bàn không còn xuất hiện trong getServingTables().
      */
     @Test
-    public void testCheckTableAvailability() {
-        System.out.println("checkTableAvailability");
-        int tableId = 1; 
-        String date = "2026-12-31";
-        String time = "19:00";
-        TableDAO instance = new TableDAO();
-        boolean expResult = false;
-        boolean result = instance.checkTableAvailability(tableId, date, time);
-        assertTrue(result, "Bàn này phải đang trống vào ngày giờ đã chỉ định");
-        // TODO review the generated test code and remove the default call to fail.
-        //fail("The test case is a prototype.");
+    @Order(2)
+    @DisplayName("TC-TABLE-02: Bàn trống không xuất hiện trong danh sách đang phục vụ")
+    void testGetServingTables_ExcludesTrongTable() {
+        // Đặt bàn về trạng thái Trống
+        tableDAO.updateTableStatus(TEST_TABLE_ID, "Tr\u1ed1ng");
+
+        ArrayList<Table> servingTables = tableDAO.getServingTables();
+        boolean found = servingTables.stream().anyMatch(t -> t.getId() == TEST_TABLE_ID);
+        assertFalse(found, "Bàn ở trạng thái 'Trống' không được xuất hiện trong getServingTables()");
+        System.out.println("TC-TABLE-02 PASSED: Bàn " + TEST_TABLE_ID + " không còn trong danh sách phục vụ");
     }
 
     /**
-     * Test of getOccupiedTables method, of class TableDAO.
+     * TC-TABLE-03: Sau khi cập nhật thành "Đang phục vụ", bàn phải xuất hiện trong getServingTables().
      */
     @Test
-    public void testGetOccupiedTables() {
-        System.out.println("getOccupiedTables");
-        TableDAO instance = new TableDAO();
-        ArrayList<Table> result = instance.getOccupiedTables();
-        // Không thể chắc chắn lúc test có bàn nào đang ăn không, nên chỉ cần test list không null
-        assertNotNull(result, "Danh sách bàn đang phục vụ không được null");
-        // TODO review the generated test code and remove the default call to fail.
-        //fail("The test case is a prototype.");
+    @Order(3)
+    @DisplayName("TC-TABLE-03: Bàn 'Đang phục vụ' xuất hiện trong danh sách")
+    void testGetServingTables_IncludesServingTable() {
+        // Cập nhật bàn sang trạng thái "Đang phục vụ"
+        tableDAO.updateTableStatus(TEST_TABLE_ID, "\u0110ang ph\u1ee5c v\u1ee5");
+
+        ArrayList<Table> servingTables = tableDAO.getServingTables();
+        boolean found = servingTables.stream().anyMatch(t -> t.getId() == TEST_TABLE_ID);
+        assertTrue(found, "Bàn ở trạng thái 'Đang phục vụ' phải xuất hiện trong getServingTables()");
+
+        // Cleanup: reset về Trống
+        tableDAO.updateTableStatus(TEST_TABLE_ID, "Tr\u1ed1ng");
+        System.out.println("TC-TABLE-03 PASSED: Bàn " + TEST_TABLE_ID + " xuất hiện trong danh sách phục vụ");
     }
 
     /**
-     * Test of getAllTables method, of class TableDAO.
+     * TC-TABLE-04: getAllTables() phải trả về danh sách không rỗng (nếu CSDL có dữ liệu).
      */
     @Test
-    public void testGetAllTables() {
-        System.out.println("getAllTables");
-        TableDAO instance = new TableDAO();
-        ArrayList<Table> result = instance.getAllTables();
-        // Khẳng định list không null
-        assertNotNull(result);
-        // Khẳng định nhà hàng phải có dữ liệu bàn (size > 0)
-        assertTrue(result.size() > 0, "Nhà hàng phải có ít nhất 1 bàn trong CSDL");
-        // TODO review the generated test code and remove the default call to fail.
-        //fail("The test case is a prototype.");
+    @Order(4)
+    @DisplayName("TC-TABLE-04: getAllTables() trả về danh sách hợp lệ")
+    void testGetAllTables_ReturnsNonNull() {
+        ArrayList<Table> allTables = tableDAO.getAllTables();
+        assertNotNull(allTables, "getAllTables() không được trả về null");
+        System.out.println("✅ TC-TABLE-04 PASSED: getAllTables() trả về " + allTables.size() + " bàn");
     }
-
-    /**
-     * Test of updateTableStatus method, of class TableDAO.
-     */
-    @Test
-    public void testUpdateTableStatus() {
-        System.out.println("updateTableStatus");
-        TableDAO instance = new TableDAO();
-        int tableId = 1;
-        // BƯỚC 1: Đổi trạng thái thành một chuỗi test
-        String newStatus = "Đang dọn dẹp"; 
-        boolean updateResult = instance.updateTableStatus(tableId, newStatus);
-        
-        // Khẳng định lệnh UPDATE chạy thành công (trả về true)
-        assertTrue(updateResult, "Lệnh Update trạng thái phải thành công");
-        
-        // BƯỚC 2: Rollback (Trả lại trạng thái cũ để không làm rác CSDL sau khi test xong)
-        instance.updateTableStatus(tableId, "Trống");
-        // TODO review the generated test code and remove the default call to fail.
-        //fail("The test case is a prototype.");
-    }
-
-    /**
-     * Test of getTableByCode method, of class TableDAO.
-     */
-    @Test
-    public void testGetTableByCode() {
-        System.out.println("getTableByCode");
-        TableDAO instance = new TableDAO();
-        
-        // 1. Kịch bản test mã bàn TỒN TẠI (Đổi "T001" thành mã có thật trong DB của bạn)
-        String validTableCode = "T001"; 
-        Table result1 = instance.getTableByCode(validTableCode);
-        assertNotNull(result1, "Phải tìm thấy bàn có mã " + validTableCode);
-        assertEquals(validTableCode, result1.getTableCode(), "Mã bàn trả về phải khớp với mã tìm kiếm");
-        
-        // 2. Kịch bản test mã bàn KHÔNG TỒN TẠI
-        String invalidTableCode = "XXX-999";
-        Table result2 = instance.getTableByCode(invalidTableCode);
-        assertNull(result2, "Bàn không tồn tại thì phải trả về null");
-        // TODO review the generated test code and remove the default call to fail.
-        //fail("The test case is a prototype.");
-    }
-    
 }

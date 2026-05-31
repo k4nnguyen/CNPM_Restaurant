@@ -1,15 +1,9 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package dao;
+
 import model.*;
 import java.sql.*;
 import java.util.ArrayList;
-/**
- *
- * @author annguyen
- */
+
 public class BookingDAO extends DAO {
     
     public BookingDAO() { 
@@ -18,6 +12,13 @@ public class BookingDAO extends DAO {
 
     // 1. Lưu thông tin đặt bàn mới (Sử dụng Transaction)
     public boolean addBooking(Booking b) {
+        if (b == null) {
+            return false;
+        }
+        if (con == null) {
+            System.err.println("Lỗi: Kết nối CSDL chưa được khởi tạo!");
+            return false;
+        }
         boolean result = false;
         String sqlBooking = "INSERT INTO tblBooking(bookDate, bookTime, quantity, status, tblClientId, tblUserId) VALUES(?,?,?,?,?,?)";
         // Thêm cột checkin vào câu lệnh lệnh SQL
@@ -33,7 +34,7 @@ public class BookingDAO extends DAO {
             ps1.setDate(1, new java.sql.Date(b.getBookDate().getTime()));
             ps1.setString(2, b.getBookTime());
             ps1.setInt(3, b.getQuantity());
-            ps1.setString(4, "Chờ nhận bàn");
+            ps1.setString(4, "Ch\u1edd nh\u1eadn b\u00e0n");
             ps1.setInt(5, b.getClient().getId());
             ps1.setInt(6, b.getUser().getId());
             ps1.executeUpdate();
@@ -94,6 +95,10 @@ public class BookingDAO extends DAO {
     // 2. Tìm kiếm phiếu đặt bàn theo số điện thoại khách hàng (Module Sửa đặt bàn)
     public ArrayList<Booking> searchBooking(String phone) {
         ArrayList<Booking> list = new ArrayList<>();
+        if (con == null) {
+            System.err.println("Lỗi: Kết nối CSDL chưa được khởi tạo!");
+            return list;
+        }
         // SQL lấy Booking và Client
         String sql = "SELECT b.*, c.name, c.phone, c.email, c.address FROM tblBooking b "
                    + "JOIN tblClient c ON b.tblClientId = c.id "
@@ -151,6 +156,10 @@ public class BookingDAO extends DAO {
 
     // 3. Cập nhật thông tin phiếu đặt bàn (Module Sửa đặt bàn)
     public boolean updateBooking(Booking b) {
+        if (con == null) {
+            System.err.println("Lỗi: Kết nối CSDL chưa được khởi tạo!");
+            return false;
+        }
         // Cập nhật ngày, giờ, số lượng dựa theo ID
         String sql = "UPDATE tblBooking SET bookDate = ?, bookTime = ?, quantity = ? WHERE id = ?";
         try {
@@ -164,5 +173,51 @@ public class BookingDAO extends DAO {
         } catch (SQLException e) {
             return false;
         }
+    }
+
+    // 4. Lấy danh sách đặt bàn theo khoảng ngày phục vụ thống kê (Module Quản lý)
+    public ArrayList<Booking> getBookingsByDateRange(String startDate, String endDate) {
+        ArrayList<Booking> list = new ArrayList<>();
+        if (con == null) {
+            System.err.println("Lỗi: Kết nối CSDL chưa được khởi tạo!");
+            return list;
+        }
+        String sql = "SELECT b.id, b.bookDate, b.bookTime, b.quantity, b.status, " +
+                      "c.id AS cid, c.name AS cname, c.phone AS cphone, " +
+                      "u.id AS uid, u.name AS uname " +
+                      "FROM tblBooking b " +
+                      "JOIN tblClient c ON b.tblClientId = c.id " +
+                      "LEFT JOIN tblUser u ON b.tblUserId = u.id " +
+                      "WHERE b.bookDate BETWEEN ? AND ? ORDER BY b.bookDate ASC";
+        try {
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setString(1, startDate);
+            ps.setString(2, endDate);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Booking b = new Booking();
+                b.setId(rs.getInt("id"));
+                b.setBookDate(rs.getDate("bookDate"));
+                b.setBookTime(rs.getString("bookTime"));
+                b.setQuantity(rs.getInt("quantity"));
+                b.setStatus(rs.getString("status"));
+
+                Client c = new Client();
+                c.setId(rs.getInt("cid"));
+                c.setName(rs.getString("cname"));
+                c.setPhone(rs.getString("cphone"));
+                b.setClient(c);
+
+                User u = new User();
+                u.setId(rs.getInt("uid"));
+                u.setFullName(rs.getString("uname"));
+                b.setUser(u);
+
+                list.add(b);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 }

@@ -11,14 +11,14 @@ import java.io.Serializable;
 public class OrderDish implements Serializable {
     private int id;
     private int quantity;
-    private double currentPrice; // Giữ nguyên tên chuẩn của bạn
+    private double currentPrice; // Giữ nguyên tên chuẩn
     private Dish dish;
 
     public OrderDish() {
         super();
     }
 
-    // Bổ sung hàm khởi tạo từ Lam (Đã sửa unitPrice thành currentPrice)
+    // Bổ sung hàm khởi tạo từ Lam
     public OrderDish(Dish dish, int quantity) {
         this.dish = dish;
         this.quantity = quantity;

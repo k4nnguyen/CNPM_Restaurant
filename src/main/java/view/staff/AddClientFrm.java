@@ -15,14 +15,12 @@ import java.awt.event.*;
  */
 public class AddClientFrm extends JFrame implements ActionListener {
     private User user;
-    private Booking tmpBooking;
     private JTextField txtClientName, txtClientPhone, txtClientEmail, txtClientAddress;
     private JButton btnAddClient, btnBack;
 
-    public AddClientFrm(User user, Booking tmpBooking) {
+    public AddClientFrm(User user) {
         super("Add New Client");
         this.user = user;
-        this.tmpBooking = tmpBooking;
         this.setSize(500, 400);
         this.setLocationRelativeTo(null);
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -74,7 +72,7 @@ public class AddClientFrm extends JFrame implements ActionListener {
         this.add(mainPanel);
         btnAddClient.addActionListener(this);
         btnBack.addActionListener(e -> {
-            new SearchClientFrm(this.user, this.tmpBooking).setVisible(true); 
+            new SearchClientFrm(this.user).setVisible(true); 
             this.dispose(); // Đóng form hiện tại
         });
     }
@@ -110,9 +108,8 @@ public class AddClientFrm extends JFrame implements ActionListener {
             
             dao.ClientDAO dao = new dao.ClientDAO();
             if (dao.addClient(c)) {
-                tmpBooking.setClient(c); // c lúc này đã có ID từ CSDL trả về
-                JOptionPane.showMessageDialog(this, "Thêm khách hàng thành công!");
-                new ConfirmBookingFrm(user, tmpBooking).setVisible(true);
+                JOptionPane.showMessageDialog(this, "Them khach hang thanh cong!"); 
+                new SearchClientFrm(user).setVisible(true);
                 this.dispose();
             } else {
                 JOptionPane.showMessageDialog(this, "Lỗi! Số điện thoại có thể đã tồn tại.");
@@ -131,8 +128,11 @@ public class AddClientFrm extends JFrame implements ActionListener {
                 Booking dummyBooking = new Booking(); // Phiếu đặt bàn ảo
                 
                 // 2. Gọi form
-                new AddClientFrm(dummyUser, dummyBooking).setVisible(true);
+                new AddClientFrm(dummyUser).setVisible(true);
             }
         });
     }
 }
+
+
+
