@@ -13,15 +13,24 @@ public class User implements Serializable {
     private int id;
     private String username;
     private String password;
-    private String name;
+    private String name;  // Giữ nguyên name của bạn để không hỏng giao diện
     private String role;
     private String phone;
-    private String email;
+    private String email; // Giữ nguyên email của bạn
 
     public User() {
         super();
     }
 
+    // Bổ sung hàm khởi tạo từ Lam (đã sửa fullName thành name)
+    public User(int id, String username, String name, String role) {
+        this.id = id;
+        this.username = username;
+        this.name = name;
+        this.role = role;
+    }
+
+    // --- CÁC HÀM GETTER / SETTER GỐC CỦA BẠN ---
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
@@ -42,4 +51,10 @@ public class User implements Serializable {
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    // Bổ sung hàm toString từ code của Lam để hỗ trợ Debug
+    @Override
+    public String toString() {
+        return "User{id=" + id + ", username='" + username + "', name='" + name + "', role='" + role + "'}";
+    }
 }

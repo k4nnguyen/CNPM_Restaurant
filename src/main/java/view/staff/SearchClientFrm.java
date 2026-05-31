@@ -19,7 +19,7 @@ public class SearchClientFrm extends JFrame implements ActionListener {
     private User user;
     private Booking tmpBooking;
     private JTextField txtClientName, txtClientPhone;
-    private JButton btnSearch, btnAddClient;
+    private JButton btnSearch, btnAddClient, btnBack;
     private JTable tblClient;
     private DefaultTableModel tableModel;
     private ArrayList<Client> listClient;
@@ -43,7 +43,13 @@ public class SearchClientFrm extends JFrame implements ActionListener {
         headerPanel.setOpaque(false);
         headerPanel.add(new JLabel("(3)"), BorderLayout.WEST);
         headerPanel.add(new JLabel("Search Client", SwingConstants.CENTER), BorderLayout.CENTER);
-
+        
+        btnBack = new JButton("Back");
+        btnBack.setBackground(new Color(255, 255, 153)); // Màu vàng nhạt
+        btnBack.setFocusPainted(false);
+        btnBack.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        headerPanel.add(btnBack, BorderLayout.EAST);
+        
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
@@ -92,6 +98,11 @@ public class SearchClientFrm extends JFrame implements ActionListener {
         btnSearch.addActionListener(this);
         btnAddClient.addActionListener(this);
         
+        btnBack.addActionListener(e -> {
+            new SearchFreeTableFrm(this.user).setVisible(true); // Quay lại trang chủ nhân viên
+            this.dispose(); // Đóng form hiện tại
+        });
+        
         // Sự kiện phím Enter trên JTable để chọn khách
         tblClient.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "Enter");
         tblClient.getActionMap().put("Enter", new AbstractAction() {
@@ -108,23 +119,30 @@ public class SearchClientFrm extends JFrame implements ActionListener {
             String name = txtClientName.getText().trim();
             String phone = txtClientPhone.getText().trim();
 
-            if (name.isEmpty() || phone.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Vui lòng nhập cả Tên và Số điện thoại để tìm kiếm!");
-                return;
-            }
-            if (!phone.matches("\\d{10}")) {
-                JOptionPane.showMessageDialog(this, "Số điện thoại phải bao gồm đúng 10 chữ số (không chứa chữ cái)!");
+            // 1. Validate: Phải nhập ít nhất 1 trong 2 trường
+            if (name.isEmpty() && phone.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Vui lòng nhập Tên hoặc Số điện thoại để tìm kiếm!");
                 return;
             }
 
-            // GIẢ LẬP DỮ LIỆU ĐỂ TEST GIAO DIỆN
-            listClient = new ArrayList<>();
-            Client c1 = new Client(); c1.setId(1); c1.setName(name); c1.setPhone(phone); c1.setAddress("Hanoi");
-            listClient.add(c1);
+            // 2. Validate SDT: Chỉ kiểm tra nếu người dùng có nhập SDT
+            if (!phone.isEmpty() && !phone.matches("\\d{10}")) {
+                JOptionPane.showMessageDialog(this, "Số điện thoại phải bao gồm đúng 10 chữ số!");
+                return;
+            }
+            
+            // --- KẾT NỐI DAO TẠI ĐÂY ---
+            dao.ClientDAO dao = new dao.ClientDAO();
+            // Truyền cả 2 tham số xuống DAO xử lý
+            listClient = dao.searchClient(name, phone);
             
             tableModel.setRowCount(0);
-            for (Client c : listClient) {
-                tableModel.addRow(new Object[]{c.getId(), c.getName(), c.getPhone(), c.getAddress()});
+            if (listClient != null && !listClient.isEmpty()) {
+                for (Client c : listClient) {
+                    tableModel.addRow(new Object[]{c.getId(), c.getName(), c.getPhone(), c.getAddress()});
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Không tìm thấy khách hàng nào phù hợp. Vui lòng thêm mới!");
             }
         } 
         else if (e.getSource().equals(btnAddClient)) {

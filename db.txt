@@ -1,0 +1,165 @@
+-- =============================================
+-- 1. TẠO CƠ SỞ DỮ LIỆU
+-- =============================================
+CREATE DATABASE restaurant_db;
+GO
+
+USE restaurant_db;
+GO
+
+-- =============================================
+-- 2. TẠO CÁC BẢNG (TABLES) ĐỘC LẬP TRƯỚC
+-- =============================================
+
+-- Bảng Khách hàng
+CREATE TABLE tblClient (
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    name NVARCHAR(50) NOT NULL,
+    phone VARCHAR(15) NOT NULL,
+    email VARCHAR(50),
+    address NVARCHAR(100)
+);
+
+-- Bảng Nhân viên / Người dùng
+CREATE TABLE tblUser (
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    name NVARCHAR(50) NOT NULL,
+    username VARCHAR(30) NOT NULL,
+    password VARCHAR(30) NOT NULL,
+    role VARCHAR(30) NOT NULL,
+    phone VARCHAR(15),
+    email VARCHAR(50)
+);
+
+-- Bảng Bàn ăn
+CREATE TABLE tblTable (
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    tableCode VARCHAR(20) NOT NULL,
+    name NVARCHAR(50),
+    capacity INT NOT NULL,
+    description NVARCHAR(255),
+    status NVARCHAR(30) NOT NULL
+);
+
+-- Bảng Món ăn / Thực đơn
+CREATE TABLE tblDish (
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    dishCode VARCHAR(20),
+    category NVARCHAR(50),
+    name NVARCHAR(100) NOT NULL,
+    price FLOAT NOT NULL
+);
+
+-- =============================================
+-- 3. TẠO CÁC BẢNG PHỤ THUỘC (CÓ KHÓA NGOẠI - FK)
+-- =============================================
+
+-- Bảng Phiếu đặt bàn
+CREATE TABLE tblBooking (
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    bookDate DATE NOT NULL,
+    bookTime VARCHAR(20) NOT NULL, -- Dùng VARCHAR để tiện lưu định dạng "19:00" từ Java
+    quantity INT NOT NULL,
+    status NVARCHAR(30) NOT NULL,
+    tblClientID INT FOREIGN KEY REFERENCES tblClient(ID),
+    tblUserID INT FOREIGN KEY REFERENCES tblUser(ID)
+);
+
+-- Bảng Chi tiết Bàn đã đặt
+CREATE TABLE tblBookedTable (
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    checkin DATETIME,
+    checkOut DATETIME,
+    price FLOAT,
+    isCheckedin INT, -- 0: Chưa nhận bàn, 1: Đã nhận bàn
+    tblBookingID INT FOREIGN KEY REFERENCES tblBooking(ID),
+    tblTableID INT FOREIGN KEY REFERENCES tblTable(ID)
+);
+
+-- Bảng Hóa đơn Gọi món
+CREATE TABLE tblOrder (
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    orderTime DATETIME NOT NULL,
+    isPaid INT DEFAULT 0, -- 0: Chưa thanh toán, 1: Đã thanh toán
+    tblUserID INT FOREIGN KEY REFERENCES tblUser(ID),
+    tblTableID INT FOREIGN KEY REFERENCES tblTable(ID)
+);
+
+-- Bảng Chi tiết Món đã gọi
+CREATE TABLE tblOrderDish (
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    quantity INT NOT NULL,
+    currentPrice FLOAT NOT NULL,
+    tblOrderID INT FOREIGN KEY REFERENCES tblOrder(ID),
+    tblDishID INT FOREIGN KEY REFERENCES tblDish(ID)
+);
+
+-- =============================================
+-- 4. INSERT DỮ LIỆU MẪU (DUMMY DATA)
+-- =============================================
+
+-- Thêm Nhân viên
+INSERT INTO tblUser (name, username, password, role, phone, email)
+VALUES 
+(N'Nguyễn Kim An', 'staff01', '123', 'nhanvien', '0123456789', 'annguyen@gmail.com'),
+(N'Trần Minh Tuấn', 'staff02', '123', 'nhanvien', '0987654321', 'tuan.tran@gmail.com'),
+(N'Lê Hải Yến', 'staff03', '123', 'nhanvien', '0911222333', 'yen.le@gmail.com');
+
+-- Thêm Khách hàng
+INSERT INTO tblClient (name, phone, email, address)
+VALUES 
+(N'An', '0916385989', 'annguyen@gmail.com', N'Hoàng Mai, Hà Nội'),
+(N'Nguyễn Văn Bình', '0901234567', 'binh.nv@gmail.com', N'Cầu Giấy, Hà Nội'),
+(N'Trần Thị Mai', '0988777666', 'mai.tran@yahoo.com', N'Thanh Xuân, Hà Nội'),
+(N'Lê Hoàng Long', '0912345678', 'long.le@gmail.com', N'Đống Đa, Hà Nội'),
+(N'Phạm Thu Thủy', '0944555666', 'thuy.pham@hotmail.com', N'Hai Bà Trưng, Hà Nội'),
+(N'Hoàng Vĩnh Khang', '0977888999', 'khang.hoang@gmail.com', N'Ba Đình, Hà Nội'),
+(N'Vũ Trọng Phụng', '0933222111', 'phung.vu@gmail.com', N'Tây Hồ, Hà Nội');
+-- Thêm Bàn
+INSERT INTO tblTable (tableCode, name, capacity, description, status)
+VALUES 
+('T001', N'Bàn số 1', 4, N'Gần cửa sổ', N'Trống'),
+('T002', N'Bàn số 2', 6, N'Góc trong', N'Trống'),
+('T003', N'Bàn VIP 1', 10, N'Phòng lạnh', N'Đang phục vụ'),
+('T004', N'Bàn số 4', 2, N'Bàn cặp đôi', N'Trống'),
+('T005', N'Bàn số 5', 2, N'Bàn cặp đôi', N'Trống'),
+('T006', N'Bàn số 6', 4, N'Giữa sảnh', N'Trống'),
+('T007', N'Bàn số 7', 4, N'Giữa sảnh', N'Đang phục vụ'),
+('T008', N'Bàn số 8', 6, N'Gần quầy bar', N'Trống'),
+('T009', N'Bàn số 9', 6, N'Gần quầy bar', N'Đã đặt'),
+('T010', N'Bàn VIP 2', 10, N'Phòng riêng cách âm', N'Trống'),
+('T011', N'Bàn VIP 3', 12, N'Phòng tiệc gia đình', N'Đang phục vụ'),
+('T012', N'Bàn Ngoài Trời 1', 4, N'Ban công', N'Trống'),
+('T013', N'Bàn Ngoài Trời 2', 4, N'Ban công', N'Trống');
+
+-- Thêm Món ăn
+INSERT INTO tblDish (dishCode, category, name, price)
+VALUES 
+('D001', N'Món chính', N'Pho bo', 45000),
+('D002', N'Món chính', N'Pho ga', 40000),
+('D003', N'Món chính', N'Com rang', 50000),
+('D004', N'Đồ uống', N'Trà đá', 5000),
+-- Khai vị
+('KV01', N'Khai vị', N'Salad cá hồi', 85000),
+('KV02', N'Khai vị', N'Súp nấm hải sản', 65000),
+('KV03', N'Khai vị', N'Nem rán Hà Nội', 55000),
+('KV04', N'Khai vị', N'Khoai tây chiên', 40000),
+-- Món chính
+('MC01', N'Món chính', N'Bò lúc lắc khoai tây', 120000),
+('MC02', N'Món chính', N'Cá chép om dưa', 150000),
+('MC03', N'Món chính', N'Gà nướng mật ong', 130000),
+('MC04', N'Món chính', N'Lẩu Thái Tomyum', 250000),
+('MC05', N'Món chính', N'Mực hấp gừng', 110000),
+('MC06', N'Món chính', N'Sườn xào chua ngọt', 95000),
+
+-- Đồ uống
+('DU01', N'Đồ uống', N'Nước ép cam tươi', 45000),
+('DU02', N'Đồ uống', N'Sinh tố xoài', 50000),
+('DU03', N'Đồ uống', N'Bia Heineken', 25000),
+('DU04', N'Đồ uống', N'Nước suối', 15000),
+
+-- Tráng miệng
+('TM01', N'Tráng miệng', N'Chè hạt sen nhãn lồng', 35000),
+('TM02', N'Tráng miệng', N'Kem tươi Vanilla', 30000),
+('TM03', N'Tráng miệng', N'Trái cây theo mùa', 60000);
+

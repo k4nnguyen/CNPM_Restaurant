@@ -3,6 +3,7 @@ view\staff\SearchBookingFrm.class
 dao\OrderDAO.class
 view\staff\StaffHomeFrm$1.class
 model\OrderDish.class
+view\staff\BillDetailFrm$1.class
 view\staff\AddClientFrm$1.class
 view\staff\OrderFrm.class
 dao\DishDAO.class
@@ -12,6 +13,8 @@ view\staff\SearchClientFrm$2.class
 view\staff\SearchFreeTableFrm$2.class
 model\Dish.class
 view\staff\SelectTableFrm$1.class
+view\staff\SelectTableToPayFrm$1.class
+view\staff\BillDetailFrm.class
 view\staff\ConfirmOrderFrm.class
 view\staff\SearchClientFrm$3.class
 dao\BookingDAO.class
@@ -26,14 +29,20 @@ view\staff\SelectTableFrm$2.class
 view\staff\SelectTableFrm.class
 view\staff\EditBookingFrm.class
 view\staff\SearchFreeTableFrm$1.class
+view\staff\SelectTableToPayFrm.class
 dao\DAO.class
 model\Booking.class
 view\staff\SearchFreeTableFrm$3.class
+model\DishStat.class
 model\Order.class
 view\staff\SearchClientFrm.class
 view\staff\SearchFreeTableFrm.class
 view\staff\ConfirmOrderFrm$1.class
+view\staff\EditBookingFrm$1.class
+dao\DishStatDAO.class
 model\Table.class
 view\staff\OrderFrm$1.class
+dao\BillDAO.class
 dao\ClientDAO.class
 view\staff\SearchBookingFrm$2.class
+model\Bill.class

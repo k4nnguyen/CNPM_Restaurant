@@ -36,6 +36,7 @@ public class DishDAO extends DAO {
                 list.add(d);
             }
         } catch (SQLException e) { 
+            e.printStackTrace();
         }
         return list;
     }

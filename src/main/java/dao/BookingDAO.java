@@ -20,7 +20,10 @@ public class BookingDAO extends DAO {
     public boolean addBooking(Booking b) {
         boolean result = false;
         String sqlBooking = "INSERT INTO tblBooking(bookDate, bookTime, quantity, status, tblClientId, tblUserId) VALUES(?,?,?,?,?,?)";
-        String sqlBookedTable = "INSERT INTO tblBookedTable(isCheckedIn, tblBookingId, tblTableId) VALUES(?,?,?)";
+        // Thêm cột checkin vào câu lệnh lệnh SQL
+        String sqlBookedTable = "INSERT INTO tblBookedTable(isCheckedIn, checkin, tblBookingId, tblTableId) VALUES(?,?,?,?)";
+        // Câu lệnh cập nhật trạng thái bàn để Form 8 nhận diện được
+        String sqlUpdateTable = "UPDATE tblTable SET status = N'Đang phục vụ' WHERE id = ?";
         
         try {
             con.setAutoCommit(false); // Bắt đầu Transaction
@@ -30,7 +33,7 @@ public class BookingDAO extends DAO {
             ps1.setDate(1, new java.sql.Date(b.getBookDate().getTime()));
             ps1.setString(2, b.getBookTime());
             ps1.setInt(3, b.getQuantity());
-            ps1.setString(4, Booking.STATUS_PENDING);
+            ps1.setString(4, "Chờ nhận bàn");
             ps1.setInt(5, b.getClient().getId());
             ps1.setInt(6, b.getUser().getId());
             ps1.executeUpdate();
@@ -40,27 +43,49 @@ public class BookingDAO extends DAO {
             if (generatedKeys.next()) {
                 b.setId(generatedKeys.getInt(1));
                 
-                // 2. Insert các BookedTable
+                // Trích xuất ngày và giờ từ Booking để ghép thành Timestamp check-in
+                String dateStr = new java.text.SimpleDateFormat("yyyy-MM-dd").format(b.getBookDate());
+                String timeStr = b.getBookTime(); // ví dụ: "19:00"
+                java.sql.Timestamp checkInTimestamp;
+                try {
+                    java.util.Date parsedDate = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").parse(dateStr + " " + timeStr);
+                    checkInTimestamp = new java.sql.Timestamp(parsedDate.getTime());
+                } catch (Exception ex) {
+                    checkInTimestamp = new java.sql.Timestamp(System.currentTimeMillis()); // Phòng hờ lỗi thì lấy giờ hiện tại
+                }
+
+                // 2. Insert các BookedTable & 3. Update trạng thái tblTable
                 PreparedStatement ps2 = con.prepareStatement(sqlBookedTable);
+                PreparedStatement ps3 = con.prepareStatement(sqlUpdateTable);
+                
                 for (BookedTable bt : b.getBookedTables()) {
-                    ps2.setBoolean(1, false);
-                    ps2.setInt(2, b.getId());
-                    ps2.setInt(3, bt.getTable().getId());
+                    // Thực hiện lưu chi tiết bàn đã đặt kèm giờ check-in giả lập
+                    ps2.setInt(1, 1); // 1 nghĩa là đã check-in
+                    ps2.setTimestamp(2, checkInTimestamp);
+                    ps2.setInt(3, b.getId());
+                    ps2.setInt(4, bt.getTable().getId());
                     ps2.executeUpdate();
+                    
+                    // Thực hiện đổi trạng thái bàn sang 'Đang phục vụ' ngoài thực tế
+                    ps3.setInt(1, bt.getTable().getId());
+                    ps3.executeUpdate();
                 }
             }
             
-            con.commit(); // Hoàn tất Transaction
+            con.commit(); // Hoàn tất Transaction thành công rực rỡ
             result = true;
         } catch (SQLException e) {
+            e.printStackTrace();
             try {
-                con.rollback(); // Hoàn tác nếu có lỗi
+                con.rollback(); // Hoàn tác toàn bộ nếu có bất kỳ lỗi nào xảy ra
             } catch (SQLException ex) {
+                ex.printStackTrace();
             }
         } finally {
             try {
                 con.setAutoCommit(true);
             } catch (SQLException ex) {
+                ex.printStackTrace();
             }
         }
         return result;
@@ -69,10 +94,16 @@ public class BookingDAO extends DAO {
     // 2. Tìm kiếm phiếu đặt bàn theo số điện thoại khách hàng (Module Sửa đặt bàn)
     public ArrayList<Booking> searchBooking(String phone) {
         ArrayList<Booking> list = new ArrayList<>();
-        // JOIN bảng tblBooking và tblClient để lấy được cả thông tin hóa đơn lẫn khách hàng
+        // SQL lấy Booking và Client
         String sql = "SELECT b.*, c.name, c.phone, c.email, c.address FROM tblBooking b "
                    + "JOIN tblClient c ON b.tblClientId = c.id "
                    + "WHERE c.phone LIKE ?";
+                   
+        // SQL lấy danh sách Bàn theo ID của Booking
+        String sqlTable = "SELECT t.id, t.tableCode FROM tblBookedTable bt "
+                        + "JOIN tblTable t ON bt.tblTableId = t.id "
+                        + "WHERE bt.tblBookingId = ?";
+                        
         try {
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, "%" + phone + "%");
@@ -93,11 +124,27 @@ public class BookingDAO extends DAO {
                 c.setPhone(rs.getString("phone"));
                 c.setEmail(rs.getString("email"));
                 c.setAddress(rs.getString("address"));
-                
                 b.setClient(c);
+
+                // --- BỔ SUNG: Chạy SQL phụ để lấy các Bàn đã đặt ---
+                PreparedStatement psTable = con.prepareStatement(sqlTable);
+                psTable.setInt(1, b.getId());
+                ResultSet rsTable = psTable.executeQuery();
+                
+                while(rsTable.next()) {
+                    Table t = new Table();
+                    t.setId(rsTable.getInt("id"));
+                    t.setTableCode(rsTable.getString("tableCode"));
+                    
+                    BookedTable bt = new BookedTable();
+                    bt.setTable(t);
+                    b.addBookedTable(bt); // Gắn bàn vào Booking
+                }
+                
                 list.add(b);
             }
         } catch (SQLException e) {
+            e.printStackTrace();
         }
         return list;
     }

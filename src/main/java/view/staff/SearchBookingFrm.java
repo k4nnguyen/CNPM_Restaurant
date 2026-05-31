@@ -3,7 +3,6 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package view.staff;
-import dao.BookingDAO;
 import model.Booking;
 import model.User;
 import javax.swing.*;
@@ -18,7 +17,7 @@ import java.util.ArrayList;
 public class SearchBookingFrm extends JFrame implements ActionListener {
     private User user;
     private JTextField txtClientPhone;
-    private JButton btnSearch;
+    private JButton btnSearch, btnBack;
     private JTable tblBooking;
     private DefaultTableModel tableModel;
     private ArrayList<Booking> listBooking;
@@ -34,15 +33,14 @@ public class SearchBookingFrm extends JFrame implements ActionListener {
         mainPanel.setBackground(new Color(208, 232, 247));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
 
-        // Header
+        JPanel topWrapper = new JPanel(new BorderLayout());
+        topWrapper.setOpaque(false);
+        
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
         headerPanel.add(new JLabel("(6)"), BorderLayout.WEST);
-        JLabel lblTitle = new JLabel("Search Booking", SwingConstants.CENTER);
-        lblTitle.setFont(new Font("SansSerif", Font.PLAIN, 20));
-        headerPanel.add(lblTitle, BorderLayout.CENTER);
+        headerPanel.add(new JLabel("Search Booking", SwingConstants.CENTER), BorderLayout.CENTER);
 
-        // Form & Button
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
@@ -50,47 +48,52 @@ public class SearchBookingFrm extends JFrame implements ActionListener {
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         gbc.gridx = 0; gbc.gridy = 0; formPanel.add(new JLabel("Client phone number"), gbc);
-        gbc.gridx = 1; txtClientPhone = new JTextField("0916385989", 20); formPanel.add(txtClientPhone, gbc);
+        gbc.gridx = 1; txtClientPhone = new JTextField("", 20); formPanel.add(txtClientPhone, gbc);
 
         JPanel btnPanel = new JPanel();
         btnPanel.setOpaque(false);
         btnSearch = new JButton("Search");
         btnSearch.setBackground(Color.WHITE);
-        btnSearch.setFocusPainted(false);
         btnSearch.setPreferredSize(new Dimension(150, 30));
         btnPanel.add(btnSearch);
-
-        JPanel topWrapper = new JPanel(new BorderLayout());
-        topWrapper.setOpaque(false);
+        
+        btnBack = new JButton("Back");
+        btnBack.setBackground(new Color(255, 255, 153)); // Màu vàng nhạt
+        btnBack.setFocusPainted(false);
+        btnBack.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        headerPanel.add(btnBack, BorderLayout.EAST);
+        
         topWrapper.add(headerPanel, BorderLayout.NORTH);
         topWrapper.add(formPanel, BorderLayout.CENTER);
         topWrapper.add(btnPanel, BorderLayout.SOUTH);
 
-        // Table
         String[] cols = {"ID", "Table Code", "Datetime", "Number of people"};
+        // Khóa không cho sửa dữ liệu bảng
         tableModel = new DefaultTableModel(cols, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Luôn trả về false -> Không ô nào sửa được
+                return false; 
             }
         };
         tblBooking = new JTable(tableModel);
+        tblBooking.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); // Chỉ chọn 1 dòng
 
         mainPanel.add(topWrapper, BorderLayout.NORTH);
         mainPanel.add(new JScrollPane(tblBooking), BorderLayout.CENTER);
         this.add(mainPanel);
 
         btnSearch.addActionListener(this);
-        tblBooking.addMouseListener(new MouseAdapter() {
+        btnBack.addActionListener(e -> {
+            new StaffHomeFrm(this.user).setVisible(true); 
+            this.dispose();
+        });
+        
+        // Sự kiện Enter để chọn
+        tblBooking.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "Enter");
+        tblBooking.getActionMap().put("Enter", new AbstractAction() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    if(listBooking != null && !listBooking.isEmpty()){
-                        Booking selectedBooking = listBooking.get(tblBooking.getSelectedRow());
-                        new EditBookingFrm(user, selectedBooking).setVisible(true);
-                        dispose();
-                    }
-                }
+            public void actionPerformed(ActionEvent ae) {
+                processSelection();
             }
         });
     }
@@ -98,18 +101,54 @@ public class SearchBookingFrm extends JFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource().equals(btnSearch)) {
-            BookingDAO dao = new BookingDAO();
+            String phone = txtClientPhone.getText().trim();
+            if (!phone.matches("\\d{10}")) {
+                JOptionPane.showMessageDialog(this, "Số điện thoại phải bao gồm đúng 10 chữ số (không chứa chữ cái)!");
+                return;
+            }
+            
+            // --- KẾT NỐI DAO TẠI ĐÂY ---
+            dao.BookingDAO dao = new dao.BookingDAO();
             listBooking = dao.searchBooking(txtClientPhone.getText().trim());
+
             tableModel.setRowCount(0);
-            if (listBooking != null) {
+            if (listBooking != null && !listBooking.isEmpty()) {
                 for (Booking b : listBooking) {
-                    tableModel.addRow(new Object[]{b.getId(), "T001", b.getBookDate() + " " + b.getBookTime(), b.getQuantity()});
+                    String dateStr = "";
+                    if(b.getBookDate() != null) {
+                        dateStr = new java.text.SimpleDateFormat("dd/MM/yyyy").format(b.getBookDate());
+                    }
+                    String timeStr = b.getBookTime() != null ? b.getBookTime() : "";
+                    
+                    // --- BỔ SUNG: Ghép nối danh sách mã bàn ---
+                    String tableCodes = "";
+                    if (b.getBookedTables() != null && !b.getBookedTables().isEmpty()) {
+                        StringBuilder sb = new StringBuilder();
+                        for (model.BookedTable bt : b.getBookedTables()) {
+                            sb.append(bt.getTable().getTableCode()).append(", ");
+                        }
+                        // Cắt bỏ dấu phẩy và khoảng trắng thừa ở cuối chuỗi
+                        tableCodes = sb.substring(0, sb.length() - 2); 
+                    }
+                    
+                    // Đẩy dữ liệu chuẩn vào bảng
+                    tableModel.addRow(new Object[]{b.getId(), tableCodes, dateStr + " " + timeStr, b.getQuantity()});
                 }
+            } else {
+                JOptionPane.showMessageDialog(this, "Khách hàng này chưa có phiếu đặt bàn nào!");
             }
         }
     }
 
-    // --- Hàm main test giao diện ---
+    private void processSelection() {
+        int row = tblBooking.getSelectedRow();
+        if (row >= 0) {
+            Booking selectedBooking = listBooking.get(row);
+            new EditBookingFrm(user, selectedBooking).setVisible(true);
+            this.dispose();
+        }
+    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             User u = new User(); u.setName("An");
