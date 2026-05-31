@@ -16,6 +16,7 @@ public class StaffHomeFrm extends JFrame implements ActionListener {
     private JButton btnBookTable;
     private JButton btnEditBooking;
     private JButton btnOrderDish;
+    private JButton btnPayment; // Thêm biến cho nút Payment
 
     public StaffHomeFrm(User user) {
         super("Trang chủ Nhân viên phục vụ");
@@ -49,17 +50,21 @@ public class StaffHomeFrm extends JFrame implements ActionListener {
         headerPanel.add(lblWelcome, BorderLayout.EAST);
         
         // 4. Tạo phần chứa các nút bấm (Center)
-        JPanel btnPanel = new JPanel(new GridLayout(3, 1, 0, 25)); // 3 hàng, 1 cột, khoảng cách dọc 25px
+        // Đổi lưới thành 4 hàng (thay vì 3) để chứa thêm nút Payment
+        JPanel btnPanel = new JPanel(new GridLayout(4, 1, 0, 25)); 
         btnPanel.setOpaque(false);
-        btnPanel.setPreferredSize(new Dimension(300, 200)); // Cố định kích thước khu vực nút bấm
+        // Tăng chiều cao Dimension từ 200 lên 260 để nút không bị lùn đi
+        btnPanel.setPreferredSize(new Dimension(300, 260)); 
         
         btnBookTable = createButton("Book a table");
         btnEditBooking = createButton("Edit a booking");
         btnOrderDish = createButton("Order dishes");
+        btnPayment = createButton("Payment"); // Khởi tạo nút Payment
         
         btnPanel.add(btnBookTable);
         btnPanel.add(btnEditBooking);
         btnPanel.add(btnOrderDish);
+        btnPanel.add(btnPayment); // Thêm nút Payment vào Panel
         
         // Dùng GridBagLayout để căn giữa btnPanel vào chính giữa màn hình mà không bị kéo giãn
         JPanel centerWrapper = new JPanel(new GridBagLayout());
@@ -97,6 +102,11 @@ public class StaffHomeFrm extends JFrame implements ActionListener {
         else if (e.getSource().equals(btnOrderDish)) {
             // Chuyển sang module Gọi món
             new view.staff.SelectTableFrm(user).setVisible(true);
+            this.dispose();
+        }
+        else if (e.getSource().equals(btnPayment)) { // Sự kiện cho nút Payment
+            // Chuyển sang module Thanh toán
+            new view.staff.SelectTableToPayFrm(user).setVisible(true);
             this.dispose();
         }
     }

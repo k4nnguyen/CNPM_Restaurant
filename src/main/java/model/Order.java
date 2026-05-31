@@ -51,4 +51,26 @@ public class Order implements Serializable {
 
     public ArrayList<OrderDish> getOrderDishes() { return orderDishes; }
     public void setOrderDishes(ArrayList<OrderDish> orderDishes) { this.orderDishes = orderDishes; }
+    
+    /**
+     * Tính lại tổng tiền dựa trên danh sách các món đã gọi.
+     * (Đã sửa đổi logic để tương thích với class OrderDish)
+     */
+    public void recalculateTotal() {
+        double total = 0;
+        for (OrderDish od : orderDishes) {
+            double subTotal = od.getQuantity() * od.getCurrentPrice();
+            total += subTotal;
+        }
+        this.totalAmount = total;
+    }
+
+    /**
+     * Hỗ trợ in nhanh thông tin Hóa đơn ra màn hình Console để Debug
+     */
+    @Override
+    public String toString() {
+        return "Order{id=" + id + ", table=" + (table != null ? table.getTableCode() : "N/A")
+                + ", status='" + status + "', totalAmount=" + totalAmount + "}";
+    }
 }

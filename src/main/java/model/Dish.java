@@ -14,11 +14,27 @@ public class Dish implements Serializable {
     private String category;
     private String name;
     private double price;
+    
+    // Bổ sung từ code của Lam
+    private String description;
+    private boolean available;
 
     public Dish() {
         super();
+        this.available = true; // Mặc định tạo món mới là CÒN HÀNG
     }
 
+    // Bổ sung hàm khởi tạo có tham số từ nhánh Lam
+    public Dish(int id, String dishCode, String name, String category, double price) {
+        this.id = id;
+        this.dishCode = dishCode;
+        this.name = name;
+        this.category = category;
+        this.price = price;
+        this.available = true;
+    }
+
+    // --- CÁC HÀM GETTER / SETTER GỐC CỦA BẠN ---
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
@@ -33,4 +49,17 @@ public class Dish implements Serializable {
 
     public double getPrice() { return price; }
     public void setPrice(double price) { this.price = price; }
+
+    // --- CÁC HÀM GETTER / SETTER MỚI BỔ SUNG ---
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public boolean isAvailable() { return available; }
+    public void setAvailable(boolean available) { this.available = available; }
+
+    // Bổ sung hàm toString từ Lam (Có format tiền tệ rất đẹp)
+    @Override
+    public String toString() {
+        return dishCode + " - " + name + " (" + category + ") - " + String.format("%,.0f VNĐ", price);
+    }
 }
