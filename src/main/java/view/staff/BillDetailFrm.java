@@ -133,18 +133,31 @@ public class BillDetailFrm extends JFrame implements ActionListener {
             btnConfirmPayment.setEnabled(false);
             return;
         }
+        
         int stt = 1;
+        double total = 0; // Thêm biến tính tổng tiền
+        
         for (OrderDish item : order.getOrderDishes()) {
+            // Tính thành tiền của từng món (Số lượng * Đơn giá)
+            // (Dùng cách này để an toàn tuyệt đối, tránh việc getTemporaryAmount() bị rỗng)
+            double thanhTien = item.getQuantity() * item.getCurrentPrice();
+            total += thanhTien; // Cộng dồn vào tổng
+            
             tableModel.addRow(new Object[]{
                 stt++,
                 item.getDish().getName(),
                 item.getDish().getCategory(),
                 item.getQuantity(),
                 String.format("%,.0f", item.getCurrentPrice()),
-                String.format("%,.0f", item.getTemporaryAmount())
+                String.format("%,.0f", thanhTien)
             });
         }
-        lblTotalAmount.setText(String.format("%,.0f VNĐ", order.getTotalAmount()));
+        
+        // Cập nhật lại tổng tiền cho đối tượng order để lát nữa lưu xuống DB
+        order.setTotalAmount(total);
+        
+        // Hiển thị ra màn hình UI
+        lblTotalAmount.setText(String.format("%,.0f VNĐ", total));
     }
 
     @Override
