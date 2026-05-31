@@ -93,7 +93,11 @@ public class SelectTableToPayFrm extends JFrame implements ActionListener {
 
     private void loadData() {
         tableModel.setRowCount(0);
-        // Kiểm tra kết nối CSDL trước khi truy vấn
+        
+        // 1. KHỞI TẠO TableDAO TRƯỚC ĐỂ ÉP HỆ THỐNG GỌI HÀM KẾT NỐI CSDL
+        TableDAO tableDao = new TableDAO(); 
+        
+        // 2. SAU ĐÓ MỚI KIỂM TRA (Lúc này dao.DAO.con chắc chắn đã có giá trị nếu CSDL bật)
         if (dao.DAO.con == null) {
             JOptionPane.showMessageDialog(this,
                     "Không thể kết nối cơ sở dữ liệu.\nVui lòng kiểm tra SQL Server đang chạy và thử lại.",
@@ -101,8 +105,9 @@ public class SelectTableToPayFrm extends JFrame implements ActionListener {
             btnSelect.setEnabled(false);
             return;
         }
-        TableDAO dao = new TableDAO();
-        listTable = dao.getOccupiedTables();
+        
+        // 3. TIẾP TỤC TRUY VẤN
+        listTable = tableDao.getOccupiedTables(); // Đổi tên biến dao thành tableDao cho đỡ nhầm
         if (listTable.isEmpty()) {
             JOptionPane.showMessageDialog(this,
                     "Hiện tại không có bàn nào đang phục vụ.",

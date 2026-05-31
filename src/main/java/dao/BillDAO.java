@@ -15,19 +15,15 @@ public class BillDAO extends DAO {
         super();
     }
 
-    /**
-     * Tạo hóa đơn mới và cập nhật trạng thái đơn đặt món.
-     * Thực hiện trong một transaction để đảm bảo tính nhất quán dữ liệu.
-     *
-     * @param bill Đối tượng Bill cần lưu vào CSDL.
-     * @return true nếu tạo hóa đơn thành công, false nếu có lỗi.
-     */
     public boolean createBill(Bill bill) {
         if (con == null) return false;
         boolean result = false;
-        String sqlBill = "INSERT INTO tblBill(createdTime, totalAmount, paymentMethod, tblOrderId, tblUserId) "
+        
+        // FIX 1: Đảm bảo tên cột createTime ở đây khớp 100% với SQL Server
+        String sqlBill = "INSERT INTO tblBill(createTime, totalAmount, paymentMethod, tblOrderID, tblUserID) "
                 + "VALUES(?,?,?,?,?)";
-        String sqlUpdateOrder = "UPDATE tblOrder SET status = N'Đã thanh toán' WHERE id = ?";
+        String sqlUpdateOrder = "UPDATE tblOrder SET isPaid = 1 WHERE id = ?";
+        
         try {
             con.setAutoCommit(false);
 
@@ -70,24 +66,23 @@ public class BillDAO extends DAO {
         return result;
     }
 
-    /**
-     * Lấy hóa đơn theo ID.
-     *
-     * @param billId ID của hóa đơn cần tìm.
-     * @return Đối tượng Bill nếu tìm thấy, null nếu không.
-     */
     public Bill getBillById(int billId) {
         if (con == null) return null;
-        String sql = "SELECT b.*, u.fullName AS staffName FROM tblBill b "
+        
+        // FIX 2: Sửa u.fullName thành u.name cho khớp với CSDL của An
+        String sql = "SELECT b.*, u.name AS staffName FROM tblBill b "
                 + "JOIN tblUser u ON b.tblUserId = u.id WHERE b.id = ?";
         try {
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setInt(1, billId);
             ResultSet rs = ps.executeQuery();
+            
             if (rs.next()) {
                 Bill bill = new Bill();
                 bill.setId(rs.getInt("id"));
-                bill.setCreatedTime(rs.getTimestamp("createdTime"));
+                
+                // FIX 1 (tiếp): Đổi thành createTime cho đồng bộ với câu INSERT ở trên
+                bill.setCreatedTime(rs.getTimestamp("createTime"));
                 bill.setTotalAmount(rs.getDouble("totalAmount"));
                 bill.setPaymentMethod(rs.getString("paymentMethod"));
 
@@ -99,6 +94,7 @@ public class BillDAO extends DAO {
                 Order order = new Order();
                 order.setId(rs.getInt("tblOrderId"));
                 bill.setOrder(order);
+                
                 return bill;
             }
         } catch (Exception e) {
