@@ -38,7 +38,8 @@ CREATE TABLE tblTable (
     name NVARCHAR(50),
     capacity INT NOT NULL,
     description NVARCHAR(255),
-    status NVARCHAR(30) NOT NULL
+    status NVARCHAR(30) NOT NULL,
+    isActive BIT DEFAULT 1
 );
 
 -- Bảng Món ăn / Thực đơn
@@ -47,7 +48,9 @@ CREATE TABLE tblDish (
     dishCode VARCHAR(20),
     category NVARCHAR(50),
     name NVARCHAR(100) NOT NULL,
-    price FLOAT NOT NULL
+    price FLOAT NOT NULL,
+    description NVARCHAR(500) NULL,
+    status NVARCHAR(20) DEFAULT 'active'
 );
 
 -- =============================================
@@ -92,6 +95,19 @@ CREATE TABLE tblOrderDish (
     currentPrice FLOAT NOT NULL,
     tblOrderID INT FOREIGN KEY REFERENCES tblOrder(ID),
     tblDishID INT FOREIGN KEY REFERENCES tblDish(ID)
+);
+
+-- Bảng Hóa đơn Thanh toán
+CREATE TABLE tblBill (
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    createdTime DATETIME NULL,
+    paymentDate DATE NULL,
+    paymentTime VARCHAR(20) NULL,
+    totalAmount FLOAT NOT NULL,
+    paymentMethod NVARCHAR(50) NULL,
+    tblOrderID INT FOREIGN KEY REFERENCES tblOrder(ID),
+    tblUserID INT FOREIGN KEY REFERENCES tblUser(ID),
+    tblBookingID INT FOREIGN KEY REFERENCES tblBooking(ID)
 );
 
 -- =============================================
