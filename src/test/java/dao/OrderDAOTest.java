@@ -34,10 +34,10 @@ public class OrderDAOTest {
         Assumptions.assumeTrue(order != null, "Bỏ qua: không có order chưa thanh toán cho bàn " + TEST_TABLE_ID);
 
         assertNotNull(order, "getOrderDetail() không được trả về null khi có order");
-        assertNotNull(order.getOrderItems(), "Danh sách orderItems không được null");
+        assertNotNull(order.getOrderDishes(), "Danh sách orderDishes không được null");
         assertTrue(order.getTotalAmount() >= 0, "Tổng tiền phải >= 0");
         assertEquals("Chưa thanh toán", order.getStatus(), "Status phải là 'Chưa thanh toán'");
-        System.out.println("✅ TC-ORDER-01 PASSED: Order ID=" + order.getId() + ", " + order.getOrderItems().size() + " món");
+        System.out.println("✅ TC-ORDER-01 PASSED: Order ID=" + order.getId() + ", " + order.getOrderDishes().size() + " món");
     }
 
     /**

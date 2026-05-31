@@ -70,18 +70,18 @@ public class SelectTableToPayFrm extends JFrame implements ActionListener {
         // Panel nút bấm
         JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
 
-        btnRefresh = new JButton("🔄 Làm mới");
+        btnRefresh = new JButton("L\u00e0m m\u1edbi");
         btnRefresh.addActionListener(this);
         btnRefresh.setFocusPainted(false);
 
-        btnSelect = new JButton("📋 Xem chi tiết hóa đơn");
+        btnSelect = new JButton("Xem chi ti\u1ebft h\u00f3a \u0111\u01a1n");
         btnSelect.setBackground(new Color(39, 174, 96));
         btnSelect.setForeground(Color.WHITE);
         btnSelect.setFont(new Font("Segoe UI", Font.BOLD, 13));
         btnSelect.setFocusPainted(false);
         btnSelect.addActionListener(this);
 
-        btnBack = new JButton("← Quay lại");
+        btnBack = new JButton("Quay l\u1ea1i");
         btnBack.addActionListener(this);
         btnBack.setFocusPainted(false);
 
@@ -102,7 +102,7 @@ public class SelectTableToPayFrm extends JFrame implements ActionListener {
             return;
         }
         TableDAO dao = new TableDAO();
-        listTable = dao.getServingTables();
+        listTable = dao.getOccupiedTables();
         if (listTable.isEmpty()) {
             JOptionPane.showMessageDialog(this,
                     "Hiện tại không có bàn nào đang phục vụ.",

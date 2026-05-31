@@ -104,11 +104,11 @@ public class BillDetailFrm extends JFrame implements ActionListener {
 
         // Nút bấm
         JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 5));
-        btnBack = new JButton("← Quay lại");
+        btnBack = new JButton("Quay l\u1ea1i");
         btnBack.addActionListener(this);
         btnBack.setFocusPainted(false);
 
-        btnConfirmPayment = new JButton("✅  Xác nhận thanh toán");
+        btnConfirmPayment = new JButton("X\u00e1c nh\u1eadn thanh to\u00e1n");
         btnConfirmPayment.setBackground(new Color(39, 174, 96));
         btnConfirmPayment.setForeground(Color.WHITE);
         btnConfirmPayment.setFont(new Font("Segoe UI", Font.BOLD, 14));
@@ -134,13 +134,13 @@ public class BillDetailFrm extends JFrame implements ActionListener {
             return;
         }
         int stt = 1;
-        for (OrderItem item : order.getOrderItems()) {
+        for (OrderDish item : order.getOrderDishes()) {
             tableModel.addRow(new Object[]{
                 stt++,
                 item.getDish().getName(),
                 item.getDish().getCategory(),
                 item.getQuantity(),
-                String.format("%,.0f", item.getUnitPrice()),
+                String.format("%,.0f", item.getCurrentPrice()),
                 String.format("%,.0f", item.getTemporaryAmount())
             });
         }

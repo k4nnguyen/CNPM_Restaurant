@@ -9,19 +9,24 @@ import java.util.Date;
  * Mỗi Order gắn với một Table và một User (nhân viên phục vụ).
  */
 public class Order implements Serializable {
+    public static final String STATUS_UNPAID = "Chưa thanh toán";
+    public static final String STATUS_PAID = "Đã thanh toán";
+
     private int id;
     private Date orderTime;
     private double totalAmount;
-    private String status; // "Chưa thanh toán", "Đã thanh toán"
-    private Table table;
+    private String status;
     private User user;
-    private ArrayList<OrderItem> orderItems;
+    private Table table;
     private ArrayList<OrderDish> orderDishes;
 
     public Order() {
         super();
-        orderItems = new ArrayList<>();
-        orderDishes = new ArrayList<>();
+        this.orderDishes = new ArrayList<OrderDish>();
+    }
+
+    public void addOrderDish(OrderDish od) {
+        this.orderDishes.add(od);
     }
 
     public int getId() { return id; }
@@ -36,54 +41,31 @@ public class Order implements Serializable {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
-    public Table getTable() { return table; }
-    public void setTable(Table table) { this.table = table; }
-
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
 
-    // Hỗ trợ OrderItem (dành cho module của Lam)
-    public ArrayList<OrderItem> getOrderItems() { return orderItems; }
-    public void setOrderItems(ArrayList<OrderItem> orderItems) { this.orderItems = orderItems; }
+    public Table getTable() { return table; }
+    public void setTable(Table table) { this.table = table; }
 
-    // Hỗ trợ OrderDish (dành cho module của Khanh)
     public ArrayList<OrderDish> getOrderDishes() { return orderDishes; }
     public void setOrderDishes(ArrayList<OrderDish> orderDishes) { this.orderDishes = orderDishes; }
 
-    public void addOrderDish(OrderDish od) {
-        if (orderDishes == null) {
-            orderDishes = new ArrayList<>();
-        }
-        orderDishes.add(od);
-
-        // Đồng bộ sang orderItems để đảm bảo tính thống nhất dữ liệu
-        if (orderItems == null) {
-            orderItems = new ArrayList<>();
-        }
-        OrderItem item = new OrderItem();
-        item.setDish(od.getDish());
-        item.setQuantity(od.getQuantity());
-        item.setUnitPrice(od.getCurrentPrice());
-        item.setTemporaryAmount(od.getQuantity() * od.getCurrentPrice());
-        orderItems.add(item);
-
-        recalculateTotal();
-    }
-
     /**
      * Tính lại tổng tiền dựa trên danh sách các món đã gọi.
+     * (Đã sửa đổi logic để tương thích với class OrderDish)
      */
     public void recalculateTotal() {
         double total = 0;
-        if (orderItems != null) {
-            for (OrderItem item : orderItems) {
-                item.setTemporaryAmount(item.getQuantity() * item.getUnitPrice());
-                total += item.getTemporaryAmount();
-            }
+        for (OrderDish od : orderDishes) {
+            double subTotal = od.getQuantity() * od.getCurrentPrice();
+            total += subTotal;
         }
         this.totalAmount = total;
     }
 
+    /**
+     * Hỗ trợ in nhanh thông tin Hóa đơn ra màn hình Console để Debug
+     */
     @Override
     public String toString() {
         return "Order{id=" + id + ", table=" + (table != null ? table.getTableCode() : "N/A")

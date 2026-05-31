@@ -22,19 +22,43 @@ public class BillDAO extends DAO {
     public boolean createBill(Bill bill) {
         if (con == null) return false;
         boolean result = false;
-        String sqlBill = "INSERT INTO tblBill(createdTime, totalAmount, paymentMethod, tblOrderId, tblUserId) "
-                + "VALUES(?,?,?,?,?)";
-        String sqlUpdateOrder = "UPDATE tblOrder SET status = N'Đã thanh toán' WHERE id = ?";
+        
+        // Tra cứu tblBookingId từ bàn đang check-in của Order
+        Integer bookingId = null;
+        String sqlLookupBooking = "SELECT TOP 1 bt.tblBookingId FROM tblBookedTable bt "
+                + "JOIN tblOrder o ON bt.tblTableId = o.tblTableId "
+                + "WHERE o.id = ? AND bt.isCheckedIn = 1 ORDER BY bt.id DESC";
+        try {
+            PreparedStatement psLookup = con.prepareStatement(sqlLookupBooking);
+            psLookup.setInt(1, bill.getOrder().getId());
+            ResultSet rsLookup = psLookup.executeQuery();
+            if (rsLookup.next()) {
+                bookingId = rsLookup.getInt("tblBookingId");
+            }
+        } catch (Exception e) {
+            // Nếu không tìm thấy hoặc lỗi thì bỏ qua, để null
+        }
+
+        String sqlBill = "INSERT INTO tblBill(createdTime, paymentDate, paymentTime, totalAmount, paymentMethod, tblOrderId, tblUserId, tblBookingId) "
+                + "VALUES(?,?,?,?,?,?,?,?)";
+        String sqlUpdateOrder = "UPDATE tblOrder SET status = N'\u0110\u00e3 thanh to\u00e1n', isPaid = 1 WHERE id = ?";
         try {
             con.setAutoCommit(false);
 
             // Bước 1: Chèn hóa đơn vào tblBill
             PreparedStatement ps1 = con.prepareStatement(sqlBill, Statement.RETURN_GENERATED_KEYS);
             ps1.setTimestamp(1, new Timestamp(bill.getCreatedTime().getTime()));
-            ps1.setDouble(2, bill.getTotalAmount());
-            ps1.setString(3, bill.getPaymentMethod());
-            ps1.setInt(4, bill.getOrder().getId());
-            ps1.setInt(5, bill.getUser().getId());
+            ps1.setDate(2, new java.sql.Date(bill.getCreatedTime().getTime()));
+            ps1.setString(3, new java.text.SimpleDateFormat("HH:mm:ss").format(bill.getCreatedTime()));
+            ps1.setDouble(4, bill.getTotalAmount());
+            ps1.setString(5, bill.getPaymentMethod());
+            ps1.setInt(6, bill.getOrder().getId());
+            ps1.setInt(7, bill.getUser().getId());
+            if (bookingId != null) {
+                ps1.setInt(8, bookingId);
+            } else {
+                ps1.setNull(8, java.sql.Types.INTEGER);
+            }
             ps1.executeUpdate();
 
             // Lấy ID vừa được tạo
@@ -75,7 +99,7 @@ public class BillDAO extends DAO {
      */
     public Bill getBillById(int billId) {
         if (con == null) return null;
-        String sql = "SELECT b.*, u.fullName AS staffName FROM tblBill b "
+        String sql = "SELECT b.*, u.name AS staffName FROM tblBill b "
                 + "JOIN tblUser u ON b.tblUserId = u.id WHERE b.id = ?";
         try {
             PreparedStatement ps = con.prepareStatement(sql);
@@ -115,29 +139,32 @@ public class BillDAO extends DAO {
         String sql = "SELECT bl.id, bl.paymentDate, bl.paymentTime, bl.totalAmount, " +
                      "b.id AS bid, b.bookDate, b.bookTime, b.quantity, b.status " +
                      "FROM tblBill bl " +
-                     "JOIN tblBooking b ON bl.tblBookingId = b.id " +
+                     "LEFT JOIN tblBooking b ON bl.tblBookingId = b.id " +
                      "WHERE bl.paymentDate BETWEEN ? AND ? ORDER BY bl.paymentDate ASC";
-        try {
-            PreparedStatement ps = con.prepareStatement(sql);
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, startDate);
             ps.setString(2, endDate);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                Bill bl = new Bill();
-                bl.setId(rs.getInt("id"));
-                bl.setPaymentDate(rs.getDate("paymentDate"));
-                bl.setPaymentTime(rs.getString("paymentTime"));
-                bl.setTotalAmount(rs.getDouble("totalAmount"));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Bill bl = new Bill();
+                    bl.setId(rs.getInt("id"));
+                    bl.setPaymentDate(rs.getDate("paymentDate"));
+                    bl.setPaymentTime(rs.getString("paymentTime"));
+                    bl.setTotalAmount(rs.getDouble("totalAmount"));
 
-                Booking b = new Booking();
-                b.setId(rs.getInt("bid"));
-                b.setBookDate(rs.getDate("bookDate"));
-                b.setBookTime(rs.getString("bookTime"));
-                b.setQuantity(rs.getInt("quantity"));
-                b.setStatus(rs.getString("status"));
-                bl.setBooking(b);
+                    int bid = rs.getInt("bid");
+                    if (!rs.wasNull()) {
+                        Booking b = new Booking();
+                        b.setId(bid);
+                        b.setBookDate(rs.getDate("bookDate"));
+                        b.setBookTime(rs.getString("bookTime"));
+                        b.setQuantity(rs.getInt("quantity"));
+                        b.setStatus(rs.getString("status"));
+                        bl.setBooking(b);
+                    }
 
-                list.add(bl);
+                    list.add(bl);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -154,7 +181,7 @@ public class BillDAO extends DAO {
         String sql = "SELECT bl.id, bl.paymentDate, bl.paymentTime, bl.totalAmount, " +
                      "b.id AS bid, b.bookDate, b.bookTime, b.quantity, b.status " +
                      "FROM tblBill bl " +
-                     "JOIN tblBooking b ON bl.tblBookingId = b.id " +
+                     "LEFT JOIN tblBooking b ON bl.tblBookingId = b.id " +
                      "WHERE bl.paymentDate BETWEEN ? AND ? ";
         
         if (timeFrame.equals("11:00-13:00")) {
@@ -165,27 +192,30 @@ public class BillDAO extends DAO {
             sql += "AND bl.paymentTime NOT BETWEEN '11:00:00' AND '13:00:00' AND bl.paymentTime NOT BETWEEN '18:00:00' AND '20:00:00' ";
         }
         sql += "ORDER BY bl.paymentDate ASC, bl.paymentTime ASC";
-        try {
-            PreparedStatement ps = con.prepareStatement(sql);
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, startDate);
             ps.setString(2, endDate);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                Bill bl = new Bill();
-                bl.setId(rs.getInt("id"));
-                bl.setPaymentDate(rs.getDate("paymentDate"));
-                bl.setPaymentTime(rs.getString("paymentTime"));
-                bl.setTotalAmount(rs.getDouble("totalAmount"));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Bill bl = new Bill();
+                    bl.setId(rs.getInt("id"));
+                    bl.setPaymentDate(rs.getDate("paymentDate"));
+                    bl.setPaymentTime(rs.getString("paymentTime"));
+                    bl.setTotalAmount(rs.getDouble("totalAmount"));
 
-                Booking b = new Booking();
-                b.setId(rs.getInt("bid"));
-                b.setBookDate(rs.getDate("bookDate"));
-                b.setBookTime(rs.getString("bookTime"));
-                b.setQuantity(rs.getInt("quantity"));
-                b.setStatus(rs.getString("status"));
-                bl.setBooking(b);
+                    int bid = rs.getInt("bid");
+                    if (!rs.wasNull()) {
+                        Booking b = new Booking();
+                        b.setId(bid);
+                        b.setBookDate(rs.getDate("bookDate"));
+                        b.setBookTime(rs.getString("bookTime"));
+                        b.setQuantity(rs.getInt("quantity"));
+                        b.setStatus(rs.getString("status"));
+                        bl.setBooking(b);
+                    }
 
-                list.add(bl);
+                    list.add(bl);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -202,30 +232,33 @@ public class BillDAO extends DAO {
         String sql = "SELECT bl.id, bl.paymentDate, bl.paymentTime, bl.totalAmount, " +
                      "b.id AS bid, b.bookDate, b.bookTime, b.quantity, b.status " +
                      "FROM tblBill bl " +
-                     "JOIN tblBooking b ON bl.tblBookingId = b.id " +
+                     "LEFT JOIN tblBooking b ON bl.tblBookingId = b.id " +
                      "WHERE MONTH(bl.paymentDate) = ? AND YEAR(bl.paymentDate) = ? " +
                      "ORDER BY bl.paymentDate ASC";
-        try {
-            PreparedStatement ps = con.prepareStatement(sql);
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, month);
             ps.setInt(2, year);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                Bill bl = new Bill();
-                bl.setId(rs.getInt("id"));
-                bl.setPaymentDate(rs.getDate("paymentDate"));
-                bl.setPaymentTime(rs.getString("paymentTime"));
-                bl.setTotalAmount(rs.getDouble("totalAmount"));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Bill bl = new Bill();
+                    bl.setId(rs.getInt("id"));
+                    bl.setPaymentDate(rs.getDate("paymentDate"));
+                    bl.setPaymentTime(rs.getString("paymentTime"));
+                    bl.setTotalAmount(rs.getDouble("totalAmount"));
 
-                Booking b = new Booking();
-                b.setId(rs.getInt("bid"));
-                b.setBookDate(rs.getDate("bookDate"));
-                b.setBookTime(rs.getString("bookTime"));
-                b.setQuantity(rs.getInt("quantity"));
-                b.setStatus(rs.getString("status"));
-                bl.setBooking(b);
+                    int bid = rs.getInt("bid");
+                    if (!rs.wasNull()) {
+                        Booking b = new Booking();
+                        b.setId(bid);
+                        b.setBookDate(rs.getDate("bookDate"));
+                        b.setBookTime(rs.getString("bookTime"));
+                        b.setQuantity(rs.getInt("quantity"));
+                        b.setStatus(rs.getString("status"));
+                        bl.setBooking(b);
+                    }
 
-                list.add(bl);
+                    list.add(bl);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

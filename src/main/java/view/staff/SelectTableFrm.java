@@ -3,7 +3,6 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package view.staff;
-import dao.TableDAO;
 import model.Order;
 import model.Table;
 import model.User;
@@ -16,12 +15,12 @@ import java.util.ArrayList;
  *
  * @author annguyen
  */
-public class SelectTableFrm extends JFrame implements ActionListener {
+public class SelectTableFrm extends JFrame {
     private User user;
     private JTable tblSelectTable;
     private DefaultTableModel tableModel;
     private ArrayList<Table> listTable;
-
+    private JButton btnBack;
     public SelectTableFrm(User u) {
         super("Select Table");
         this.user = u;
@@ -33,74 +32,65 @@ public class SelectTableFrm extends JFrame implements ActionListener {
         mainPanel.setBackground(new Color(208, 232, 247));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
 
-        // Header
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
         headerPanel.add(new JLabel("(8)"), BorderLayout.WEST);
-        JLabel lblTitle = new JLabel("Select Table", SwingConstants.CENTER);
-        lblTitle.setFont(new Font("SansSerif", Font.PLAIN, 20));
-        headerPanel.add(lblTitle, BorderLayout.CENTER);
+        headerPanel.add(new JLabel("Select Table", SwingConstants.CENTER), BorderLayout.CENTER);
 
-        // Table
-        String[] cols = {"ID", "Table Code", "Datetime", "Number of people"};
+        String[] cols = {"ID", "Table Code", "Status", "Capacity"};
         tableModel = new DefaultTableModel(cols, 0) {
             @Override
-            public boolean isCellEditable(int row, int column) {
-                return false; // Luôn trả về false -> Không ô nào sửa được
-            }
+            public boolean isCellEditable(int row, int column) { return false; }
         };
         tblSelectTable = new JTable(tableModel);
-
+        tblSelectTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
+        btnBack = new JButton("Back");
+        btnBack.setBackground(new Color(255, 255, 153)); // Màu vàng nhạt
+        btnBack.setFocusPainted(false);
+        btnBack.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        headerPanel.add(btnBack, BorderLayout.EAST);
+        
         mainPanel.add(headerPanel, BorderLayout.NORTH);
         mainPanel.add(new JScrollPane(tblSelectTable), BorderLayout.CENTER);
         this.add(mainPanel);
 
-        // Giả lập load bàn đang phục vụ
-        listTable = new ArrayList<>();
-        Table t1 = new Table(); 
-        t1.setId(1); t1.setTableCode("T001"); t1.setCapacity(4); t1.setStatus("Đang phục vụ");
-        Table t2 = new Table(); 
-        t2.setId(2); t2.setTableCode("T002"); t2.setCapacity(6); t2.setStatus("Đang phục vụ");
-        listTable.add(t1);
-        listTable.add(t2);
+        // --- KẾT NỐI DAO TẠI ĐÂY ---
+        dao.TableDAO dao = new dao.TableDAO();
+        listTable = dao.getOccupiedTables(); // Lấy các bàn có trạng thái Đang phục vụ
         
-        //TableDAO dao = new TableDAO();
-        //listTable = dao.getOccupiedTables();
         if (listTable != null) {
             for (Table t : listTable) {
-                // Mockup dữ liệu datetime và number of people
-                tableModel.addRow(new Object[]{t.getId(), t.getTableCode(), "21/05/2025 19:00", t.getCapacity()});
+                tableModel.addRow(new Object[]{t.getId(), t.getTableCode(), "Đang phục vụ", t.getCapacity()});
             }
         }
-
-        tblSelectTable.addMouseListener(new MouseAdapter() {
+        
+        btnBack.addActionListener(e -> {
+            new StaffHomeFrm(this.user).setVisible(true); 
+            this.dispose();
+        });
+        // Chọn bằng phím Enter
+        tblSelectTable.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "Enter");
+        tblSelectTable.getActionMap().put("Enter", new AbstractAction() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    if(listTable != null && !listTable.isEmpty()){
-                        Table selectedTable = listTable.get(tblSelectTable.getSelectedRow());
-                        Order tmpOrder = new Order();
-                        tmpOrder.setTable(selectedTable);
-                        tmpOrder.setUser(user);
-                        
-                        // Yêu cầu bạn đã tạo OrderFrm để dòng dưới không lỗi
-                        // new OrderFrm(user, tmpOrder).setVisible(true);
-                        dispose();
-                    }
+            public void actionPerformed(ActionEvent ae) {
+                int row = tblSelectTable.getSelectedRow();
+                if (row >= 0) {
+                    Table selectedTable = listTable.get(row);
+                    Order tmpOrder = new Order();
+                    tmpOrder.setTable(selectedTable);
+                    tmpOrder.setUser(user);
+                    
+                    new OrderFrm(user, tmpOrder).setVisible(true);
+                    dispose();
                 }
             }
         });
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-    }
-
-    // --- Hàm main test giao diện ---
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            User u = new User(); u.setName("An");
-            new SelectTableFrm(u).setVisible(true);
+            new SelectTableFrm(new User()).setVisible(true);
         });
     }
 }

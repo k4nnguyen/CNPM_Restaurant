@@ -12,6 +12,10 @@ public class Table implements Serializable {
     private int capacity;
     private String description;
     private String status; // "Trống", "Đang phục vụ", "Đã đặt trước"
+    private boolean active = true;
+
+    public static final String STATUS_EMPTY = "Trống";
+    public static final String STATUS_SERVING = "Đang phục vụ";
 
     public Table() {
         super();
@@ -42,6 +46,15 @@ public class Table implements Serializable {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getCode() { return tableCode; }
+    public void setCode(String code) { this.tableCode = code; }
+
+    public int getMaxNumberOfClients() { return capacity; }
+    public void setMaxNumberOfClients(int maxNumberOfClients) { this.capacity = maxNumberOfClients; }
+
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
 
     @Override
     public String toString() {

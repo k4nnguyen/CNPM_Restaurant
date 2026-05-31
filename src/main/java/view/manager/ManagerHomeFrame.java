@@ -42,15 +42,24 @@ public class ManagerHomeFrame extends JFrame {
         headerPanel.add(titleLabel);
         headerPanel.add(userLabel);
 
-        JPanel navigationPanel = new JPanel(new GridLayout(3, 1, 12, 12));
+        JPanel navigationPanel = new JPanel(new GridLayout(6, 1, 12, 12));
+        JButton dishButton = new JButton("Quan ly mon an");
+        JButton tableButton = new JButton("Quan ly ban");
+        JButton statButton = new JButton("Xem thong ke bao cao");
         JButton clientButton = new JButton("Quan ly khach hang");
         JButton staffButton = new JButton("Quan ly nhan vien");
         JButton logoutButton = new JButton("Dang xuat");
 
+        dishButton.addActionListener(event -> { new ManageDishFrm(currentUser).setVisible(true); dispose(); });
+        tableButton.addActionListener(event -> { new ManageTableFrm(currentUser).setVisible(true); dispose(); });
+        statButton.addActionListener(event -> new SelectStatFrm(currentUser).setVisible(true));
         clientButton.addActionListener(event -> new ManageClientFrame(this).setVisible(true));
         staffButton.addActionListener(event -> new ManageStaffFrame(currentUser).setVisible(true));
         logoutButton.addActionListener(event -> logout());
 
+        navigationPanel.add(dishButton);
+        navigationPanel.add(tableButton);
+        navigationPanel.add(statButton);
         navigationPanel.add(clientButton);
         navigationPanel.add(staffButton);
         navigationPanel.add(logoutButton);

@@ -37,6 +37,44 @@ public class ClientDAO extends DAO {
         return list;
     }
 
+    // Cập nhật hàm searchClient nhận 2 tham số cho luồng của An_Lam
+    public ArrayList<Client> searchClient(String name, String phone) {
+        ArrayList<Client> list = new ArrayList<>();
+        String sql = "SELECT * FROM tblClient WHERE 1=1";
+        
+        if (name != null && !name.isEmpty()) {
+            sql += " AND name LIKE ?";
+        }
+        if (phone != null && !phone.isEmpty()) {
+            sql += " AND phone LIKE ?";
+        }
+
+        try {
+            PreparedStatement ps = con.prepareStatement(sql);
+            int paramIndex = 1;
+            if (name != null && !name.isEmpty()) {
+                ps.setString(paramIndex++, "%" + name + "%");
+            }
+            if (phone != null && !phone.isEmpty()) {
+                ps.setString(paramIndex++, "%" + phone + "%");
+            }
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Client c = new Client();
+                c.setId(rs.getInt("id"));
+                c.setName(rs.getString("name"));
+                c.setPhone(rs.getString("phone"));
+                c.setEmail(rs.getString("email"));
+                c.setAddress(rs.getString("address"));
+                list.add(c);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public boolean addClient(Client c) {
         String sql = "INSERT INTO tblClient(name, phone, email, address, status) VALUES(?,?,?,?,?)";
         try (PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {

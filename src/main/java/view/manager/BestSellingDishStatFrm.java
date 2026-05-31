@@ -63,7 +63,7 @@ public class BestSellingDishStatFrm extends JFrame implements ActionListener {
         txtEndDate.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         pnlFilter.add(txtEndDate);
 
-        btnStat = new JButton("📊  Thống kê");
+        btnStat = new JButton("Th\u1ed1ng k\u00ea");
         btnStat.setBackground(new Color(142, 68, 173));
         btnStat.setForeground(Color.WHITE);
         btnStat.setFont(new Font("Segoe UI", Font.BOLD, 13));
@@ -124,7 +124,7 @@ public class BestSellingDishStatFrm extends JFrame implements ActionListener {
         pnlRevenue.add(lblTotalRevenue);
 
         JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        btnBack = new JButton("← Quay lại");
+        btnBack = new JButton("Quay l\u1ea1i");
         btnBack.setFocusPainted(false);
         btnBack.addActionListener(this);
         pnlButtons.add(btnBack);

@@ -13,6 +13,10 @@ public class Dish implements Serializable {
     private double price;
     private String description;
     private boolean available;
+    
+    public static final String STATUS_ACTIVE = "active";
+    public static final String STATUS_INACTIVE = "inactive";
+    private String status = STATUS_ACTIVE;
 
     public Dish() {
         super();
@@ -48,6 +52,15 @@ public class Dish implements Serializable {
 
     public boolean isAvailable() { return available; }
     public void setAvailable(boolean available) { this.available = available; }
+
+    public String getCode() { return dishCode; }
+    public void setCode(String code) { this.dishCode = code; }
+
+    public double getCurrentPrice() { return price; }
+    public void setCurrentPrice(double currentPrice) { this.price = currentPrice; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
     @Override
     public String toString() {

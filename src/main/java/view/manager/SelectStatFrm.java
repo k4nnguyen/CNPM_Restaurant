@@ -52,7 +52,7 @@ public class SelectStatFrm extends JFrame implements ActionListener {
         gbc.gridwidth = GridBagConstraints.REMAINDER;
 
         // Lựa chọn 1: Thống kê lượng khách theo khung giờ
-        btnGuestStat = new JButton("📊  Thống kê lượng khách theo khung giờ");
+        btnGuestStat = new JButton("Th\u1ed1ng k\u00ea l\u01b0\u1ee3ng kh\u00e1ch theo khung gi\u1edd");
         btnGuestStat.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnGuestStat.setPreferredSize(new Dimension(340, 45));
         btnGuestStat.setBackground(new Color(142, 68, 173));
@@ -62,7 +62,7 @@ public class SelectStatFrm extends JFrame implements ActionListener {
         pnlOptions.add(btnGuestStat, gbc);
 
         // Lựa chọn 2: Báo cáo doanh thu theo tháng
-        btnRevenueStat = new JButton("💰  Báo cáo doanh thu theo tháng");
+        btnRevenueStat = new JButton("B\u00e1o c\u00e1o doanh thu theo th\u00e1ng");
         btnRevenueStat.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnRevenueStat.setPreferredSize(new Dimension(340, 45));
         btnRevenueStat.setBackground(new Color(142, 68, 173));
@@ -72,7 +72,7 @@ public class SelectStatFrm extends JFrame implements ActionListener {
         pnlOptions.add(btnRevenueStat, gbc);
 
         // Lựa chọn 3: Thống kê món ăn bán chạy
-        btnBestSellingDish = new JButton("🍽️  Thống kê món ăn bán chạy");
+        btnBestSellingDish = new JButton("Th\u1ed1ng k\u00ea m\u00f3n \u0103n b\u00e1n ch\u1ea1y");
         btnBestSellingDish.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnBestSellingDish.setPreferredSize(new Dimension(340, 45));
         btnBestSellingDish.setBackground(new Color(142, 68, 173));
@@ -86,7 +86,7 @@ public class SelectStatFrm extends JFrame implements ActionListener {
         // Nút quay lại
         JPanel pnlBottom = new JPanel(new FlowLayout(FlowLayout.CENTER));
         pnlBottom.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
-        btnBack = new JButton("← Quay lại trang chủ");
+        btnBack = new JButton("Quay l\u1ea1i trang ch\u1ee7");
         btnBack.setFocusPainted(false);
         btnBack.addActionListener(this);
         pnlBottom.add(btnBack);
@@ -105,7 +105,7 @@ public class SelectStatFrm extends JFrame implements ActionListener {
             new BestSellingDishStatFrm(user).setVisible(true);
             this.setVisible(false);
         } else if (e.getSource() == btnBack) {
-            new ManagerHomeFrm(user).setVisible(true);
+            new ManagerHomeFrame(user).setVisible(true);
             this.dispose();
         }
     }

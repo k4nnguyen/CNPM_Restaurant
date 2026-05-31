@@ -174,6 +174,30 @@ public class DAO {
             statement.execute("IF OBJECT_ID(N'tblUser', N'U') IS NOT NULL AND COL_LENGTH('tblUser', 'userCode') IS NULL "
                     + "ALTER TABLE tblUser ADD userCode NVARCHAR(20) NULL");
 
+            statement.execute("IF OBJECT_ID(N'tblOrder', N'U') IS NOT NULL AND COL_LENGTH('tblOrder', 'isPaid') IS NULL "
+                    + "ALTER TABLE tblOrder ADD isPaid INT NOT NULL CONSTRAINT DF_tblOrder_isPaid DEFAULT 0");
+
+            statement.execute("IF OBJECT_ID(N'tblTable', N'U') IS NOT NULL AND COL_LENGTH('tblTable', 'name') IS NULL "
+                    + "ALTER TABLE tblTable ADD name NVARCHAR(50) NULL");
+
+            statement.execute("IF OBJECT_ID(N'tblBill', N'U') IS NULL "
+                    + "BEGIN "
+                    + "CREATE TABLE tblBill ("
+                    + "id INT IDENTITY(1,1) PRIMARY KEY, "
+                    + "createdTime DATETIME NULL, "
+                    + "paymentDate DATE NULL, "
+                    + "paymentTime VARCHAR(20) NULL, "
+                    + "totalAmount FLOAT NOT NULL, "
+                    + "paymentMethod NVARCHAR(50) NULL, "
+                    + "tblOrderId INT NULL, "
+                    + "tblUserId INT NULL, "
+                    + "tblBookingId INT NULL, "
+                    + "CONSTRAINT FK_tblBill_tblOrder FOREIGN KEY (tblOrderId) REFERENCES tblOrder(id), "
+                    + "CONSTRAINT FK_tblBill_tblUser FOREIGN KEY (tblUserId) REFERENCES tblUser(id), "
+                    + "CONSTRAINT FK_tblBill_tblBooking FOREIGN KEY (tblBookingId) REFERENCES tblBooking(id)"
+                    + ") "
+                    + "END");
+
             statement.execute("IF OBJECT_ID(N'tblUser', N'U') IS NULL "
                     + "BEGIN "
                     + "CREATE TABLE tblUser ("
@@ -188,9 +212,27 @@ public class DAO {
                     + "status NVARCHAR(20) NOT NULL CONSTRAINT DF_tblUser_status DEFAULT N'ACTIVE'"
                     + ") "
                     + "END");
+
+            statement.execute("IF OBJECT_ID(N'tblDish', N'U') IS NOT NULL AND COL_LENGTH('tblDish', 'description') IS NULL "
+                    + "ALTER TABLE tblDish ADD description NVARCHAR(500) NULL");
+
+            statement.execute("IF OBJECT_ID(N'tblDish', N'U') IS NOT NULL AND COL_LENGTH('tblDish', 'status') IS NULL "
+                    + "ALTER TABLE tblDish ADD status NVARCHAR(20) NOT NULL CONSTRAINT DF_tblDish_status DEFAULT 'active'");
+
+            statement.execute("IF OBJECT_ID(N'tblTable', N'U') IS NOT NULL AND COL_LENGTH('tblTable', 'isActive') IS NULL "
+                    + "ALTER TABLE tblTable ADD isActive BIT NOT NULL CONSTRAINT DF_tblTable_isActive DEFAULT 1");
+
+            statement.execute("IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'UX_tblDish_dishCode' AND object_id = OBJECT_ID('dbo.tblDish')) "
+                    + "AND NOT EXISTS (SELECT dishCode FROM dbo.tblDish GROUP BY dishCode HAVING COUNT(*) > 1) "
+                    + "CREATE UNIQUE INDEX UX_tblDish_dishCode ON dbo.tblDish(dishCode)");
+
+            statement.execute("IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'UX_tblTable_tableCode' AND object_id = OBJECT_ID('dbo.tblTable')) "
+                    + "AND NOT EXISTS (SELECT tableCode FROM dbo.tblTable GROUP BY tableCode HAVING COUNT(*) > 1) "
+                    + "CREATE UNIQUE INDEX UX_tblTable_tableCode ON dbo.tblTable(tableCode)");
         }
 
         seedDefaultUsers();
+        seedMockData();
     }
 
     private void seedDefaultUsers() throws SQLException {
@@ -221,5 +263,143 @@ public class DAO {
         statement.setString(7, email);
         statement.setString(8, "ACTIVE");
         statement.addBatch();
+    }
+
+    private void seedMockData() {
+        try (Statement statement = con.createStatement();
+             ResultSet resultSet = statement.executeQuery("SELECT COUNT(*) FROM tblBill")) {
+            if (resultSet.next() && resultSet.getInt(1) > 0) {
+                return; // already seeded
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        try (Statement stmt = con.createStatement()) {
+            // Month 1: Jan 2026
+            stmt.execute("INSERT INTO tblBooking(bookDate, bookTime, quantity, status, tblClientId, tblUserId) "
+                    + "VALUES('2026-01-15', '12:00', 4, N'Đã thanh toán', "
+                    + "(SELECT TOP 1 id FROM tblClient WHERE phone = '0900000002'), "
+                    + "(SELECT TOP 1 id FROM tblUser WHERE username = 'staff01'))");
+            
+            stmt.execute("INSERT INTO tblOrder(orderTime, totalAmount, status, tblUserId, tblTableId, isPaid) "
+                    + "VALUES('2026-01-15 12:15:00', 145000, N'Đã thanh toán', "
+                    + "(SELECT TOP 1 id FROM tblUser WHERE username = 'staff01'), "
+                    + "(SELECT TOP 1 id FROM tblTable WHERE tableCode = 'T002'), 1)");
+
+            stmt.execute("INSERT INTO tblOrderDish(quantity, currentPrice, tblOrderId, tblDishId) "
+                    + "VALUES(2, 60000, (SELECT MAX(id) FROM tblOrder), (SELECT TOP 1 id FROM tblDish WHERE dishCode = 'D002')), "
+                    + "(1, 25000, (SELECT MAX(id) FROM tblOrder), (SELECT TOP 1 id FROM tblDish WHERE dishCode = 'D004'))");
+
+            stmt.execute("INSERT INTO tblBill(createdTime, paymentDate, paymentTime, totalAmount, paymentMethod, tblOrderId, tblUserId, tblBookingId) "
+                    + "VALUES('2026-01-15 13:00:00', '2026-01-15', '13:00:00', 145000, N'Tiền mặt', "
+                    + "(SELECT MAX(id) FROM tblOrder), "
+                    + "(SELECT TOP 1 id FROM tblUser WHERE username = 'staff01'), "
+                    + "(SELECT MAX(id) FROM tblBooking))");
+
+
+            // Month 2: Feb 2026
+            stmt.execute("INSERT INTO tblBooking(bookDate, bookTime, quantity, status, tblClientId, tblUserId) "
+                    + "VALUES('2026-02-14', '18:30', 2, N'Đã thanh toán', "
+                    + "(SELECT TOP 1 id FROM tblClient WHERE phone = '0900000002'), "
+                    + "(SELECT TOP 1 id FROM tblUser WHERE username = 'staff01'))");
+            
+            stmt.execute("INSERT INTO tblOrder(orderTime, totalAmount, status, tblUserId, tblTableId, isPaid) "
+                    + "VALUES('2026-02-14 18:45:00', 110000, N'Đã thanh toán', "
+                    + "(SELECT TOP 1 id FROM tblUser WHERE username = 'staff01'), "
+                    + "(SELECT TOP 1 id FROM tblTable WHERE tableCode = 'T001'), 1)");
+
+            stmt.execute("INSERT INTO tblOrderDish(quantity, currentPrice, tblOrderId, tblDishId) "
+                    + "VALUES(2, 45000, (SELECT MAX(id) FROM tblOrder), (SELECT TOP 1 id FROM tblDish WHERE dishCode = 'D001')), "
+                    + "(2, 10000, (SELECT MAX(id) FROM tblOrder), (SELECT TOP 1 id FROM tblDish WHERE dishCode = 'D003'))");
+
+            stmt.execute("INSERT INTO tblBill(createdTime, paymentDate, paymentTime, totalAmount, paymentMethod, tblOrderId, tblUserId, tblBookingId) "
+                    + "VALUES('2026-02-14 19:45:00', '2026-02-14', '19:45:00', 110000, N'Chuyển khoản', "
+                    + "(SELECT MAX(id) FROM tblOrder), "
+                    + "(SELECT TOP 1 id FROM tblUser WHERE username = 'staff01'), "
+                    + "(SELECT MAX(id) FROM tblBooking))");
+
+
+            // Month 3: Mar 2026
+            stmt.execute("INSERT INTO tblBooking(bookDate, bookTime, quantity, status, tblClientId, tblUserId) "
+                    + "VALUES('2026-03-20', '11:30', 6, N'Đã thanh toán', "
+                    + "(SELECT TOP 1 id FROM tblClient WHERE phone = '0900000002'), "
+                    + "(SELECT TOP 1 id FROM tblUser WHERE username = 'staff01'))");
+            
+            stmt.execute("INSERT INTO tblOrder(orderTime, totalAmount, status, tblUserId, tblTableId, isPaid) "
+                    + "VALUES('2026-03-20 11:45:00', 360000, N'Đã thanh toán', "
+                    + "(SELECT TOP 1 id FROM tblUser WHERE username = 'staff01'), "
+                    + "(SELECT TOP 1 id FROM tblTable WHERE tableCode = 'T003'), 1)");
+
+            stmt.execute("INSERT INTO tblOrderDish(quantity, currentPrice, tblOrderId, tblDishId) "
+                    + "VALUES(6, 60000, (SELECT MAX(id) FROM tblOrder), (SELECT TOP 1 id FROM tblDish WHERE dishCode = 'D002'))");
+
+            stmt.execute("INSERT INTO tblBill(createdTime, paymentDate, paymentTime, totalAmount, paymentMethod, tblOrderId, tblUserId, tblBookingId) "
+                    + "VALUES('2026-03-20 12:45:00', '2026-03-20', '12:45:00', 360000, N'Thẻ', "
+                    + "(SELECT MAX(id) FROM tblOrder), "
+                    + "(SELECT TOP 1 id FROM tblUser WHERE username = 'staff01'), "
+                    + "(SELECT MAX(id) FROM tblBooking))");
+
+
+            // Month 4: Apr 2026
+            stmt.execute("INSERT INTO tblBooking(bookDate, bookTime, quantity, status, tblClientId, tblUserId) "
+                    + "VALUES('2026-04-10', '19:00', 4, N'Đã thanh toán', "
+                    + "(SELECT TOP 1 id FROM tblClient WHERE phone = '0900000002'), "
+                    + "(SELECT TOP 1 id FROM tblUser WHERE username = 'staff01'))");
+            
+            stmt.execute("INSERT INTO tblOrder(orderTime, totalAmount, status, tblUserId, tblTableId, isPaid) "
+                    + "VALUES('2026-04-10 19:15:00', 210000, N'Đã thanh toán', "
+                    + "(SELECT TOP 1 id FROM tblUser WHERE username = 'staff01'), "
+                    + "(SELECT TOP 1 id FROM tblTable WHERE tableCode = 'T002'), 1)");
+
+            stmt.execute("INSERT INTO tblOrderDish(quantity, currentPrice, tblOrderId, tblDishId) "
+                    + "VALUES(3, 60000, (SELECT MAX(id) FROM tblOrder), (SELECT TOP 1 id FROM tblDish WHERE dishCode = 'D002')), "
+                    + "(3, 10000, (SELECT MAX(id) FROM tblOrder), (SELECT TOP 1 id FROM tblDish WHERE dishCode = 'D003'))");
+
+            stmt.execute("INSERT INTO tblBill(createdTime, paymentDate, paymentTime, totalAmount, paymentMethod, tblOrderId, tblUserId, tblBookingId) "
+                    + "VALUES('2026-04-10 20:15:00', '2026-04-10', '20:15:00', 210000, N'Tiền mặt', "
+                    + "(SELECT MAX(id) FROM tblOrder), "
+                    + "(SELECT TOP 1 id FROM tblUser WHERE username = 'staff01'), "
+                    + "(SELECT MAX(id) FROM tblBooking))");
+
+
+            // Month 5: May 2026 (Several bills!)
+            // Bill 1: Walk-in (bookingId is null, tests LEFT JOIN!)
+            stmt.execute("INSERT INTO tblOrder(orderTime, totalAmount, status, tblUserId, tblTableId, isPaid) "
+                    + "VALUES('2026-05-12 12:00:00', 115000, N'Đã thanh toán', "
+                    + "(SELECT TOP 1 id FROM tblUser WHERE username = 'staff01'), "
+                    + "(SELECT TOP 1 id FROM tblTable WHERE tableCode = 'T001'), 1)");
+
+            stmt.execute("INSERT INTO tblOrderDish(quantity, currentPrice, tblOrderId, tblDishId) "
+                    + "VALUES(2, 45000, (SELECT MAX(id) FROM tblOrder), (SELECT TOP 1 id FROM tblDish WHERE dishCode = 'D001')), "
+                    + "(1, 25000, (SELECT MAX(id) FROM tblOrder), (SELECT TOP 1 id FROM tblDish WHERE dishCode = 'D004'))");
+
+            stmt.execute("INSERT INTO tblBill(createdTime, paymentDate, paymentTime, totalAmount, paymentMethod, tblOrderId, tblUserId, tblBookingId) "
+                    + "VALUES('2026-05-12 13:00:00', '2026-05-12', '13:00:00', 115000, N'Tiền mặt', "
+                    + "(SELECT MAX(id) FROM tblOrder), "
+                    + "(SELECT TOP 1 id FROM tblUser WHERE username = 'staff01'), "
+                    + "NULL)");
+
+            // Bill 2: Walk-in
+            stmt.execute("INSERT INTO tblOrder(orderTime, totalAmount, status, tblUserId, tblTableId, isPaid) "
+                    + "VALUES('2026-05-25 18:30:00', 205000, N'Đã thanh toán', "
+                    + "(SELECT TOP 1 id FROM tblUser WHERE username = 'staff01'), "
+                    + "(SELECT TOP 1 id FROM tblTable WHERE tableCode = 'T002'), 1)");
+
+            stmt.execute("INSERT INTO tblOrderDish(quantity, currentPrice, tblOrderId, tblDishId) "
+                    + "VALUES(3, 60000, (SELECT MAX(id) FROM tblOrder), (SELECT TOP 1 id FROM tblDish WHERE dishCode = 'D002')), "
+                    + "(1, 25000, (SELECT MAX(id) FROM tblOrder), (SELECT TOP 1 id FROM tblDish WHERE dishCode = 'D004'))");
+
+            stmt.execute("INSERT INTO tblBill(createdTime, paymentDate, paymentTime, totalAmount, paymentMethod, tblOrderId, tblUserId, tblBookingId) "
+                    + "VALUES('2026-05-25 19:30:00', '2026-05-25', '19:30:00', 205000, N'Tiền mặt', "
+                    + "(SELECT MAX(id) FROM tblOrder), "
+                    + "(SELECT TOP 1 id FROM tblUser WHERE username = 'staff01'), "
+                    + "NULL)");
+            
+            System.out.println("Seed mock data to restaurant_db completed successfully!");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }
