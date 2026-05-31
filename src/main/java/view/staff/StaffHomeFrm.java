@@ -1,40 +1,28 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package view.staff;
+
 import model.User;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-/**
- *
- * @author annguyen
- */
+
 public class StaffHomeFrm extends JFrame implements ActionListener {
     private User user;
-    private JButton btnBookTable;
-    private JButton btnEditBooking;
-    private JButton btnOrderDish;
-    private JButton btnPayment; // Thêm biến cho nút Payment
+    private JButton btnSearchClient;
 
     public StaffHomeFrm(User user) {
-        super("Trang chủ Nhân viên phục vụ");
+        super("Trang chu Nhan vien phuc vu");
         this.user = user;
         
-        // 1. Cài đặt thông số cơ bản cho Cửa sổ
         this.setSize(600, 400);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setLocationRelativeTo(null); // Căn giữa màn hình
+        this.setLocationRelativeTo(null);
         
-        // 2. Tạo Panel chính với màu nền xanh nhạt giống bản thiết kế
         JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.setBackground(new Color(208, 232, 247)); // Mã màu xanh nhạt (Light Blue)
+        mainPanel.setBackground(new Color(208, 232, 247));
         
-        // 3. Tạo phần Header (Chứa số (1), Tiêu đề và Welcome)
         JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setOpaque(false); // Trong suốt để lộ màu nền của mainPanel
-        headerPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 10, 20)); // Căn lề trên, trái, dưới, phải
+        headerPanel.setOpaque(false);
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 10, 20));
         
         JLabel lblStep = new JLabel("(1)");
         lblStep.setFont(new Font("SansSerif", Font.PLAIN, 14));
@@ -49,84 +37,52 @@ public class StaffHomeFrm extends JFrame implements ActionListener {
         headerPanel.add(lblTitle, BorderLayout.CENTER);
         headerPanel.add(lblWelcome, BorderLayout.EAST);
         
-        // 4. Tạo phần chứa các nút bấm (Center)
-        // Đổi lưới thành 4 hàng (thay vì 3) để chứa thêm nút Payment
-        JPanel btnPanel = new JPanel(new GridLayout(4, 1, 0, 25)); 
+        JPanel btnPanel = new JPanel(new GridLayout(1, 1, 0, 25)); 
         btnPanel.setOpaque(false);
-        // Tăng chiều cao Dimension từ 200 lên 260 để nút không bị lùn đi
-        btnPanel.setPreferredSize(new Dimension(300, 260)); 
+        btnPanel.setPreferredSize(new Dimension(300, 60)); 
         
-        btnBookTable = createButton("Book a table");
-        btnEditBooking = createButton("Edit a booking");
-        btnOrderDish = createButton("Order dishes");
-        btnPayment = createButton("Payment"); // Khởi tạo nút Payment
+        btnSearchClient = createButton("Manage Clients");
+        btnPanel.add(btnSearchClient);
         
-        btnPanel.add(btnBookTable);
-        btnPanel.add(btnEditBooking);
-        btnPanel.add(btnOrderDish);
-        btnPanel.add(btnPayment); // Thêm nút Payment vào Panel
-        
-        // Dùng GridBagLayout để căn giữa btnPanel vào chính giữa màn hình mà không bị kéo giãn
         JPanel centerWrapper = new JPanel(new GridBagLayout());
         centerWrapper.setOpaque(false);
         centerWrapper.add(btnPanel);
         
-        // 5. Thêm tất cả vào mainPanel và đưa lên JFrame
         mainPanel.add(headerPanel, BorderLayout.NORTH);
         mainPanel.add(centerWrapper, BorderLayout.CENTER);
         this.add(mainPanel);
     }
     
-    // Hàm hỗ trợ tạo nút bấm với giao diện chuẩn (Màu trắng, viền mảnh)
     private JButton createButton(String text) {
         JButton btn = new JButton(text);
-        btn.setBackground(Color.WHITE); // Nền nút màu trắng
-        btn.setFocusPainted(false); // Bỏ viền outline khi click
+        btn.setBackground(Color.WHITE);
+        btn.setFocusPainted(false);
         btn.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        btn.addActionListener(this); // Đăng ký luôn sự kiện click
+        btn.addActionListener(this);
         return btn;
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        // Xử lý chuyển trang tương ứng với từng nút bấm
-        if (e.getSource().equals(btnBookTable)) {
-            new SearchFreeTableFrm(user).setVisible(true);
+        if (e.getSource().equals(btnSearchClient)) {
+            new view.staff.SearchClientFrm(user).setVisible(true);
             this.dispose(); 
         } 
-        else if (e.getSource().equals(btnEditBooking)) {
-            // Chuyển sang module Sửa đặt bàn
-            new view.staff.SearchBookingFrm(user).setVisible(true);
-            this.dispose();
-        } 
-        else if (e.getSource().equals(btnOrderDish)) {
-            // Chuyển sang module Gọi món
-            new view.staff.SelectTableFrm(user).setVisible(true);
-            this.dispose();
-        }
-        else if (e.getSource().equals(btnPayment)) { // Sự kiện cho nút Payment
-            // Chuyển sang module Thanh toán
-            new view.staff.SelectTableToPayFrm(user).setVisible(true);
-            this.dispose();
-        }
     }
 
-    // Hàm main để test nhanh giao diện
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                // Khởi tạo đối tượng User và set dữ liệu khớp 100% với record trong CSDL
                 User dummyUser = new User();
                 dummyUser.setId(1);
-                dummyUser.setName("Nguyễn Kim An");
+                dummyUser.setName("Nguyen Kim An");
                 dummyUser.setUsername("staff01");
                 dummyUser.setPassword("123");
                 dummyUser.setRole("nhanvien");
                 dummyUser.setPhone("0123456789");
                 dummyUser.setEmail("annguyen@gmail.com");
 
-                // Truyền user vào form và hiển thị
                 new StaffHomeFrm(dummyUser).setVisible(true);
             }
         });
