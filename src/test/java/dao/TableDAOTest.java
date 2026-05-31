@@ -29,9 +29,9 @@ public class TableDAOTest {
     @Order(1)
     @DisplayName("TC-TABLE-01: Cập nhật trạng thái bàn thành 'Trống'")
     void testUpdateTableStatus_ToTrong() {
-        boolean result = tableDAO.updateTableStatus(TEST_TABLE_ID, "Trống");
+        boolean result = tableDAO.updateTableStatus(TEST_TABLE_ID, "Tr\u1ed1ng");
         assertTrue(result, "updateTableStatus() phải trả về true khi cập nhật thành công");
-        System.out.println("✅ TC-TABLE-01 PASSED: Cập nhật trạng thái bàn " + TEST_TABLE_ID + " thành 'Trống'");
+        System.out.println("TC-TABLE-01 PASSED: Cập nhật trạng thái bàn " + TEST_TABLE_ID + " thành 'Trống'");
     }
 
     /**
@@ -42,12 +42,12 @@ public class TableDAOTest {
     @DisplayName("TC-TABLE-02: Bàn trống không xuất hiện trong danh sách đang phục vụ")
     void testGetServingTables_ExcludesTrongTable() {
         // Đặt bàn về trạng thái Trống
-        tableDAO.updateTableStatus(TEST_TABLE_ID, "Trống");
+        tableDAO.updateTableStatus(TEST_TABLE_ID, "Tr\u1ed1ng");
 
         ArrayList<Table> servingTables = tableDAO.getServingTables();
         boolean found = servingTables.stream().anyMatch(t -> t.getId() == TEST_TABLE_ID);
         assertFalse(found, "Bàn ở trạng thái 'Trống' không được xuất hiện trong getServingTables()");
-        System.out.println("✅ TC-TABLE-02 PASSED: Bàn " + TEST_TABLE_ID + " không còn trong danh sách phục vụ");
+        System.out.println("TC-TABLE-02 PASSED: Bàn " + TEST_TABLE_ID + " không còn trong danh sách phục vụ");
     }
 
     /**
@@ -58,15 +58,15 @@ public class TableDAOTest {
     @DisplayName("TC-TABLE-03: Bàn 'Đang phục vụ' xuất hiện trong danh sách")
     void testGetServingTables_IncludesServingTable() {
         // Cập nhật bàn sang trạng thái "Đang phục vụ"
-        tableDAO.updateTableStatus(TEST_TABLE_ID, "Đang phục vụ");
+        tableDAO.updateTableStatus(TEST_TABLE_ID, "\u0110ang ph\u1ee5c v\u1ee5");
 
         ArrayList<Table> servingTables = tableDAO.getServingTables();
         boolean found = servingTables.stream().anyMatch(t -> t.getId() == TEST_TABLE_ID);
         assertTrue(found, "Bàn ở trạng thái 'Đang phục vụ' phải xuất hiện trong getServingTables()");
 
         // Cleanup: reset về Trống
-        tableDAO.updateTableStatus(TEST_TABLE_ID, "Trống");
-        System.out.println("✅ TC-TABLE-03 PASSED: Bàn " + TEST_TABLE_ID + " xuất hiện trong danh sách phục vụ");
+        tableDAO.updateTableStatus(TEST_TABLE_ID, "Tr\u1ed1ng");
+        System.out.println("TC-TABLE-03 PASSED: Bàn " + TEST_TABLE_ID + " xuất hiện trong danh sách phục vụ");
     }
 
     /**

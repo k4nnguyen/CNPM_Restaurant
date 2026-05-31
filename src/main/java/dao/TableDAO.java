@@ -23,7 +23,7 @@ public class TableDAO extends DAO {
     public ArrayList<Table> getServingTables() {
         ArrayList<Table> list = new ArrayList<>();
         if (con == null) return list;
-        String sql = "SELECT * FROM tblTable WHERE status = N'Đang phục vụ'";
+        String sql = "SELECT * FROM tblTable WHERE status = N'\u0110ang ph\u1ee5c v\u1ee5'";
         try {
             PreparedStatement ps = con.prepareStatement(sql);
             ResultSet rs = ps.executeQuery();

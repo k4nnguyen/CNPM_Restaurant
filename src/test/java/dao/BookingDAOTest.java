@@ -48,8 +48,7 @@ public class BookingDAOTest {
         boolean expResult = false;
         boolean result = instance.addBooking(b);
         assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+        System.out.println("TC-BOOKING-01 PASSED: addBooking(null) returns false");
     }
     
 }
