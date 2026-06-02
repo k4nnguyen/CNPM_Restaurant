@@ -130,6 +130,35 @@ public class OrderFrm extends JFrame implements ActionListener {
     }
 
     private void loadData() {
+        // --- 1. LƯU TẠM DỮ LIỆU ĐANG NHẬP TRÊN BẢNG VÀO tmpOrder TRƯỚC KHI SEARCH ---
+        if (tblDish.isEditing()) {
+            tblDish.getCellEditor().stopCellEditing(); 
+        }
+        // Chỉ lưu tạm khi bảng đang có dữ liệu (không phải lần chạy đầu tiên)
+        if (tableModel.getRowCount() > 0 && listDish != null) {
+            for (int i = 0; i < tableModel.getRowCount(); i++) {
+                int qty = Integer.parseInt(tableModel.getValueAt(i, 2).toString());
+                int currentDishId = listDish.get(i).getId();
+                
+                boolean foundInTmpOrder = false;
+                // Tìm xem món này đã có trong tmpOrder chưa
+                for (OrderDish od : tmpOrder.getOrderDishes()) {
+                    if (od.getDish().getId() == currentDishId) {
+                        od.setQuantity(qty); // Nếu có rồi thì cập nhật số lượng
+                        foundInTmpOrder = true;
+                        break;
+                    }
+                }
+                // Nếu chưa có trong tmpOrder và khách gõ số > 0, thì thêm mới vào
+                if (!foundInTmpOrder && qty > 0) {
+                    OrderDish newOd = new OrderDish();
+                    newOd.setDish(listDish.get(i));
+                    newOd.setQuantity(qty);
+                    newOd.setCurrentPrice(listDish.get(i).getPrice());
+                    tmpOrder.addOrderDish(newOd);
+                }
+            }
+        }
         // --- KẾT NỐI DAO TẠI ĐÂY ---
         dao.DishDAO dao = new dao.DishDAO();
         // Lấy từ khóa, nếu ô textbox rỗng thì lấy toàn bộ

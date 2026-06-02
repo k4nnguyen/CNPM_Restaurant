@@ -9,6 +9,7 @@ public class Table implements Serializable {
     private int id;
     private String tableCode;
     private String name;
+    private String checkinTime;
     private int capacity;
     private String description;
     private String status; // "Trống", "Đang phục vụ", "Đã đặt trước"
@@ -55,7 +56,14 @@ public class Table implements Serializable {
 
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
-
+    
+    public String getCheckinTime(){
+        return checkinTime;
+    }
+    public void setCheckinTime(String checkinTime)
+    {
+        this.checkinTime = checkinTime;
+    }
     @Override
     public String toString() {
         return tableCode + " - " + name + " (Sức chứa: " + capacity + ") - " + status;

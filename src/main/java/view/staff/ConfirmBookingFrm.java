@@ -30,7 +30,7 @@ public class ConfirmBookingFrm extends JFrame implements ActionListener {
         this.setSize(500, 450);
         this.setLocationRelativeTo(null);
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
+        
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
         mainPanel.setBackground(new Color(208, 232, 247));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 20, 20));
@@ -45,6 +45,7 @@ public class ConfirmBookingFrm extends JFrame implements ActionListener {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 15, 10, 15);
         gbc.fill = GridBagConstraints.HORIZONTAL;
+        
 
         // Các Textfield bị khóa chỉnh sửa ngay từ khi khởi tạo
         gbc.gridx = 0; gbc.gridy = 0; formPanel.add(new JLabel("Client name"), gbc);
