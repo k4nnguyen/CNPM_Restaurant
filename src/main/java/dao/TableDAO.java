@@ -27,7 +27,7 @@ public class TableDAO extends DAO {
     // PHẦN 1: LUỒNG ĐẶT BÀN & GỌI MÓN (AN)
     // =================================================================
 
-    // 1. Tìm kiếm bàn trống (Hỗ trợ ghép bàn & Chặn khoảng thời gian 75 phút)
+    // 1. Tìm kiếm bàn trống (Hỗ trợ ghép bàn & Chặn khoảng thời gian 75 phút) (Book a table module)
     public ArrayList<Table> searchFreeTable(String date, String time, int quantity) {
         ArrayList<Table> list = new ArrayList<>();
         if (con == null) return list;
@@ -58,7 +58,7 @@ public class TableDAO extends DAO {
         return list;
     }
 
-    // 2. Kiểm tra trạng thái 1 bàn cụ thể có trống hay không
+    // 2. Kiểm tra trạng thái 1 bàn cụ thể có trống hay không (Edit booking module)
     public boolean checkTableAvailability(int tableId, String date, String time) {
         if (con == null) return false;
         boolean isAvailable = true;
@@ -89,7 +89,11 @@ public class TableDAO extends DAO {
     public ArrayList<Table> getOccupiedTables() {
         ArrayList<Table> list = new ArrayList<>();
         if (con == null) return list;
-        String sql = "SELECT * FROM tblTable WHERE status = N'\u0110ang ph\u1ee5c v\u1ee5'";
+        String sql = "SELECT DISTINCT t.id, t.tableCode, t.name, t.capacity, t.description, t.status, " +
+                     "FORMAT(bt.checkin, 'HH:mm dd/MM/yyyy') AS checkinTime " +
+                     "FROM tblTable t " + 
+                     "JOIN tblBookedTable bt ON t.id = bt.tblTableID " +
+                     "WHERE bt.isCheckedin = 1";
         try {
             PreparedStatement ps = con.prepareStatement(sql);
             ResultSet rs = ps.executeQuery();
@@ -101,6 +105,7 @@ public class TableDAO extends DAO {
                 t.setCapacity(rs.getInt("capacity"));
                 t.setDescription(rs.getString("description"));
                 t.setStatus(rs.getString("status"));
+                t.setCheckinTime(rs.getString("checkinTime"));
                 list.add(t);
             }
         } catch (SQLException e) {

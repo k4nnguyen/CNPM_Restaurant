@@ -29,6 +29,8 @@ public class SearchFreeTableFrm extends JFrame implements ActionListener {
     public SearchFreeTableFrm(User user) {
         super("Search Free Table");
         this.user = user;
+        
+        // Phần giao diện
         this.setSize(600, 450);
         this.setLocationRelativeTo(null);
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -73,7 +75,8 @@ public class SearchFreeTableFrm extends JFrame implements ActionListener {
         topWrapper.add(headerPanel, BorderLayout.NORTH);
         topWrapper.add(formPanel, BorderLayout.CENTER);
         topWrapper.add(btnPanel, BorderLayout.SOUTH);
-
+        
+        // Phần xử lý logic edit bảng (Không cho sửa bảng)
         // Table
         String[] cols = {"ID", "Table Code", "Capacity", "Status"};
         tableModel = new DefaultTableModel(cols, 0) {
@@ -90,7 +93,7 @@ public class SearchFreeTableFrm extends JFrame implements ActionListener {
         mainPanel.add(new JScrollPane(tblFreeTable), BorderLayout.CENTER);
         this.add(mainPanel);
 
-        // --- Bắt sự kiện ---
+        // --- Bắt sự kiện  ---
         btnSearch.addActionListener(this);
         btnBack.addActionListener(e -> {
             new StaffHomeFrm(this.user).setVisible(true); // Quay lại trang chủ nhân viên

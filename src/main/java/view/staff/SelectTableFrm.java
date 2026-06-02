@@ -37,7 +37,7 @@ public class SelectTableFrm extends JFrame {
         headerPanel.add(new JLabel("(8)"), BorderLayout.WEST);
         headerPanel.add(new JLabel("Select Table", SwingConstants.CENTER), BorderLayout.CENTER);
 
-        String[] cols = {"ID", "Table Code", "Status", "Capacity"};
+        String[] cols = {"ID", "Table Code", "Date Time", "Number of People"};
         tableModel = new DefaultTableModel(cols, 0) {
             @Override
             public boolean isCellEditable(int row, int column) { return false; }
@@ -61,7 +61,8 @@ public class SelectTableFrm extends JFrame {
         
         if (listTable != null) {
             for (Table t : listTable) {
-                tableModel.addRow(new Object[]{t.getId(), t.getTableCode(), "Đang phục vụ", t.getCapacity()});
+                String time = (t.getCheckinTime() != null) ? t.getCheckinTime(): "Đang phục vụ";
+                tableModel.addRow(new Object[]{t.getId(), t.getTableCode(), time, t.getCapacity()});
             }
         }
         

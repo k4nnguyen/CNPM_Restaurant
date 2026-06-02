@@ -131,9 +131,34 @@ public class EditBookingFrm extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         if (e.getSource().equals(btnCheckFreeTable)) {
             if (validateInputs()) {
-                // Giả lập DAO trả về true (Bàn còn trống)
-                isCheckedAndFree = true;
-                JOptionPane.showMessageDialog(this, "Bàn hợp lệ, có thể xác nhận đổi!");
+                // 1. Chuyển đổi định dạng ngày sang chuẩn SQL Server (yyyy-MM-dd)
+                String dbDate = "";
+                String dbTime = txtTime.getText().trim();
+                try {
+                    Date parsedDate = new SimpleDateFormat("dd/MM/yyyy").parse(txtDate.getText().trim());
+                    dbDate = new SimpleDateFormat("yyyy-MM-dd").format(parsedDate);
+                } catch (Exception ex) {}
+
+                // 2. Gọi DAO để kiểm tra
+                dao.TableDAO tableDao = new dao.TableDAO();
+                boolean allTablesFree = true;
+                
+                // Lặp qua danh sách các bàn trong phiếu đặt này (booking.getBookedTables())
+                for (model.BookedTable bt : booking.getBookedTables()) {
+                    if (!tableDao.checkTableAvailability(bt.getTable().getId(), dbDate, dbTime)) {
+                        allTablesFree = false;
+                        break; // Chỉ cần 1 bàn bị kẹt là báo lỗi ngay
+                    }
+                }
+
+                // 3. Xử lý kết quả
+                if (allTablesFree) {
+                    isCheckedAndFree = true;
+                    JOptionPane.showMessageDialog(this, "Các bàn đều trống, có thể xác nhận đổi lịch!");
+                } else {
+                    isCheckedAndFree = false;
+                    JOptionPane.showMessageDialog(this, "Rất tiếc, có bàn trong đơn này đã bị kẹt lịch vào khung giờ mới!");
+                }
             }
         } else if (e.getSource().equals(btnConfirm)) {
             if (!isCheckedAndFree) {
