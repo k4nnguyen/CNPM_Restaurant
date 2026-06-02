@@ -35,4 +35,4 @@
         <maven.compiler.release>24</maven.compiler.release>
         <exec.mainClass>com.mycompany.restaurant_module.Restaurant_Module</exec.mainClass>
     </properties>
-</project>
+</project> 

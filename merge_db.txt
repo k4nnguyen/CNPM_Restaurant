@@ -37,6 +37,16 @@ IF COL_LENGTH('tblOrder', 'status') IS NULL
     ALTER TABLE tblOrder ADD status NVARCHAR(50) NOT NULL DEFAULT N'Chưa thanh toán';
 GO
 
+IF COL_LENGTH('tblDish', 'description') IS NULL
+BEGIN
+    ALTER TABLE tblDish ADD description NVARCHAR(255) NULL;
+END
+GO
+
+-- 2. Cập nhật lại cột 'status' thành 'ACTIVE' để khớp với biến Dish.STATUS_ACTIVE của Lam
+UPDATE tblDish SET status = 'ACTIVE';
+GO
+
 -- 5. Vá bảng Chi tiết đặt bàn (Đổi INT sang BIT cho chuẩn Java boolean)
 -- Dùng INFORMATION_SCHEMA.COLUMNS để check kiểu dữ liệu thay vì hàm ảo
 IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS 
