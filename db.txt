@@ -94,6 +94,32 @@ CREATE TABLE tblOrderDish (
     tblDishID INT FOREIGN KEY REFERENCES tblDish(ID)
 );
 
+-- Bảng Hóa đơn Thanh toán
+CREATE TABLE tblBill (
+    ID            INT           IDENTITY(1,1) PRIMARY KEY,
+    createTime    DATETIME      NOT NULL DEFAULT GETDATE(),
+    totalAmount   FLOAT         NOT NULL,
+    paymentMethod VARCHAR(50)   NULL,
+    tblOrderID    INT           FOREIGN KEY REFERENCES tblOrder(ID),
+    tblUserID     INT           FOREIGN KEY REFERENCES tblUser(ID)
+);
+
+-- Thống kê món ăn bán chạy (VIEW - ánh xạ với model DishStat.java)
+
+CREATE VIEW tblDishStat AS
+SELECT
+    d.ID,
+    d.dishCode,
+    d.category,
+    d.name,
+    d.price,
+    ISNULL(SUM(od.quantity), 0)                        AS totalQuantity,
+    ISNULL(SUM(od.quantity * od.currentPrice), 0)      AS totalRevenue
+FROM tblDish d
+LEFT JOIN tblOrderDish od ON od.tblDishID = d.ID
+GROUP BY
+    d.ID, d.dishCode, d.category, d.name, d.price;
+GO
 -- =============================================
 -- 4. INSERT DỮ LIỆU MẪU (DUMMY DATA)
 -- =============================================
