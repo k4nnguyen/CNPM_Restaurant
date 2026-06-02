@@ -84,6 +84,7 @@ public class DAO {
         }
         
         // Hỗ trợ cả 3 chuẩn kết nối: localhost thường, port 1433, và SQLEXPRESS (máy của bạn)
+        candidateUrls.add("jdbc:sqlserver://PC\\SQLEXPRESS02;databaseName=restaurant_db;encrypt=true;trustServerCertificate=true;loginTimeout=5;");
         candidateUrls.add("jdbc:sqlserver://localhost;databaseName=restaurant_db;encrypt=true;trustServerCertificate=true;loginTimeout=2;");
         candidateUrls.add("jdbc:sqlserver://localhost:1433;databaseName=restaurant_db;encrypt=true;trustServerCertificate=true;loginTimeout=2;");
         candidateUrls.add("jdbc:sqlserver://localhost;instanceName=SQLEXPRESS;databaseName=restaurant_db;encrypt=true;trustServerCertificate=true;loginTimeout=2;");

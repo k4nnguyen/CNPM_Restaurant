@@ -87,4 +87,23 @@ public class ManagerHomeFrame extends JFrame {
         dispose();
         new LoginFrame().setVisible(true);
     }
+
+    // Hàm main để test nhanh giao diện trên NetBeans
+    public static void main(String[] args) {
+        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                User dummyUser = new User();
+                dummyUser.setId(4);
+                dummyUser.setName("Quản lý nhà hàng");
+                dummyUser.setUsername("manager");
+                dummyUser.setPassword("123456");
+                dummyUser.setRole("manager");
+                dummyUser.setPhone("0900000001");
+                dummyUser.setEmail("manager@restaurant.com");
+                
+                new ManagerHomeFrame(dummyUser).setVisible(true);
+            }
+        });
+    }
 }

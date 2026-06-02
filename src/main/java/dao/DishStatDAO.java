@@ -27,12 +27,12 @@ public class DishStatDAO extends DAO {
         if (con == null) return list;
         String sql = "SELECT d.id, d.dishCode, d.name, d.category, d.price, "
                 + "SUM(oi.quantity) AS totalQuantity, "
-                + "SUM(oi.quantity * oi.unitPrice) AS totalRevenue "
+                + "SUM(oi.quantity * oi.currentPrice) AS totalRevenue "
                 + "FROM tblDish d "
-                + "JOIN tblOrderItem oi ON d.id = oi.tblDishId "
-                + "JOIN tblOrder o ON oi.tblOrderId = o.id "
-                + "JOIN tblBill b ON o.id = b.tblOrderId "
-                + "WHERE b.createdTime >= ? AND b.createdTime <= ? "
+                + "JOIN tblOrderDish oi ON d.id = oi.tblDishID "
+                + "JOIN tblOrder o ON oi.tblOrderID = o.id "
+                + "JOIN tblBill b ON o.id = b.tblOrderID "
+                + "WHERE b.createTime >= ? AND b.createTime <= ? "
                 + "GROUP BY d.id, d.dishCode, d.name, d.category, d.price "
                 + "ORDER BY totalRevenue DESC";
         try {
@@ -67,7 +67,7 @@ public class DishStatDAO extends DAO {
     public double getTotalRevenue(String startDate, String endDate) {
         if (con == null) return 0.0;
         String sql = "SELECT SUM(totalAmount) AS totalRevenue FROM tblBill "
-                + "WHERE createdTime >= ? AND createdTime <= ?";
+                + "WHERE createTime >= ? AND createTime <= ?";
         try {
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, startDate + " 00:00:00");
