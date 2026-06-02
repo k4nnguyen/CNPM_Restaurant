@@ -39,22 +39,22 @@ public class DishDAOTest {
     }
 
     /**
-     * Test of searchDish method, of class DishDAO.
+     * Test of searchDishes method, of class DishDAO.
      */
     @Test
-    public void testSearchDish() {
-        System.out.println("searchDish");
+    public void testSearchDishes() {
+        System.out.println("searchDishes");
         DishDAO instance = new DishDAO();
         
         // KỊCH BẢN 1: Tìm kiếm với chuỗi rỗng
         // Câu lệnh LIKE '%%' sẽ lấy lên toàn bộ danh sách món ăn trong Menu
-        ArrayList<Dish> resultAll = instance.searchDish("");
+        ArrayList<Dish> resultAll = instance.searchDishes("");
         assertNotNull(resultAll, "Danh sách món ăn trả về không được null");
         assertTrue(resultAll.size() >= 0, "Query tìm kiếm phải thực thi thành công");
 
         // KỊCH BẢN 2: Tìm kiếm món ăn CÓ TỒN TẠI
         String validKeyword = "Gà"; 
-        ArrayList<Dish> resultFound = instance.searchDish(validKeyword);
+        ArrayList<Dish> resultFound = instance.searchDishes(validKeyword);
         
         assertNotNull(resultFound);
         if (!resultFound.isEmpty()) {
@@ -66,7 +66,7 @@ public class DishDAOTest {
 
         // KỊCH BẢN 3: Tìm kiếm món ăn KHÔNG TỒN TẠI
         String invalidKeyword = "abxxyznmasad";
-        ArrayList<Dish> resultNotFound = instance.searchDish(invalidKeyword);
+        ArrayList<Dish> resultNotFound = instance.searchDishes(invalidKeyword);
         
         assertEquals(0, resultNotFound.size(), "Nếu không tìm thấy, danh sách trả về phải rỗng (size = 0)");
         // TODO review the generated test code and remove the default call to fail.

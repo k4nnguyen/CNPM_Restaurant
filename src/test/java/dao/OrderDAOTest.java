@@ -5,7 +5,12 @@
 package dao;
 
 import java.util.ArrayList;
+import java.util.Date;
+import model.Dish;
+import model.Order;
+import model.OrderDish;
 import model.Table;
+import model.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,9 +22,9 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * @author annguyen
  */
-public class TableDAOTest {
+public class OrderDAOTest {
     
-    public TableDAOTest() {
+    public OrderDAOTest() {
     }
     
     @BeforeAll
@@ -39,110 +44,102 @@ public class TableDAOTest {
     }
 
     /**
-     * Test of searchFreeTable method, of class TableDAO.
+     * Test of addOrder method, of class OrderDAO.
      */
     @Test
-    public void testSearchFreeTable() {
-        System.out.println("searchFreeTable");
-        String date = "2026-12-31";
-        String time = "19:00";
-        int quantity = 2;
-        TableDAO instance = new TableDAO();
-        ArrayList<Table> result = instance.searchFreeTable(date, time, quantity);
-        // Khẳng định danh sách trả về không bị null
-        assertNotNull(result, "Danh sách trả về không được null");
-        // Khẳng định phải tìm thấy ít nhất 1 bàn trống (Giả định nhà hàng có bàn)
-        assertTrue(result.size() >= 0, "Hệ thống chạy thành công, trả về list size >= 0");
-        // TODO review the generated test code and remove the default call to fail.
-        //fail("The test case is a prototype.");
-    }
-
-    /**
-     * Test of checkTableAvailability method, of class TableDAO.
-     */
-    @Test
-    public void testCheckTableAvailability() {
-        System.out.println("checkTableAvailability");
-        int tableId = 1; 
-        String date = "2026-12-31";
-        String time = "19:00";
-        TableDAO instance = new TableDAO();
-        boolean expResult = false;
-        boolean result = instance.checkTableAvailability(tableId, date, time);
-        assertTrue(result, "Bàn này phải đang trống vào ngày giờ đã chỉ định");
-        // TODO review the generated test code and remove the default call to fail.
-        //fail("The test case is a prototype.");
-    }
-
-    /**
-     * Test of getOccupiedTables method, of class TableDAO.
-     */
-    @Test
-    public void testGetOccupiedTables() {
-        System.out.println("getOccupiedTables");
-        TableDAO instance = new TableDAO();
-        ArrayList<Table> result = instance.getOccupiedTables();
-        // Không thể chắc chắn lúc test có bàn nào đang ăn không, nên chỉ cần test list không null
-        assertNotNull(result, "Danh sách bàn đang phục vụ không được null");
-        // TODO review the generated test code and remove the default call to fail.
-        //fail("The test case is a prototype.");
-    }
-
-    /**
-     * Test of getAllTables method, of class TableDAO.
-     */
-    @Test
-    public void testGetAllTables() {
-        System.out.println("getAllTables");
-        TableDAO instance = new TableDAO();
-        ArrayList<Table> result = instance.getAllTables();
-        // Khẳng định list không null
-        assertNotNull(result);
-        // Khẳng định nhà hàng phải có dữ liệu bàn (size > 0)
-        assertTrue(result.size() > 0, "Nhà hàng phải có ít nhất 1 bàn trong CSDL");
-        // TODO review the generated test code and remove the default call to fail.
-        //fail("The test case is a prototype.");
-    }
-
-    /**
-     * Test of updateTableStatus method, of class TableDAO.
-     */
-    @Test
-    public void testUpdateTableStatus() {
-        System.out.println("updateTableStatus");
-        TableDAO instance = new TableDAO();
-        int tableId = 1;
-        // BƯỚC 1: Đổi trạng thái thành một chuỗi test
-        String newStatus = "Đang dọn dẹp"; 
-        boolean updateResult = instance.updateTableStatus(tableId, newStatus);
+    public void testAddOrder() {
+        System.out.println("addOrder");
+        OrderDAO instance = new OrderDAO();
         
-        // Khẳng định lệnh UPDATE chạy thành công (trả về true)
-        assertTrue(updateResult, "Lệnh Update trạng thái phải thành công");
+        // 1. Khởi tạo đối tượng Order với Bàn và Nhân viên giả lập
+        Order o = new Order();
+        o.setOrderTime(new Date());
         
-        // BƯỚC 2: Rollback (Trả lại trạng thái cũ để không làm rác CSDL sau khi test xong)
-        instance.updateTableStatus(tableId, "Trống");
+        Table t = new Table();
+        t.setId(1); // THAY ĐỔI: ID Bàn đang ngồi gọi món
+        o.setTable(t);
+        
+        User u = new User();
+        u.setId(1); // THAY ĐỔI: ID Nhân viên đang trực
+        o.setUser(u);
+        
+        // 2. Khởi tạo một món ăn khách gọi (OrderDish)
+        Dish d = new Dish();
+        d.setId(1); // THAY ĐỔI: ID Món ăn có trong Menu
+        d.setPrice(50000); 
+        
+        OrderDish od = new OrderDish(d, 2); // Khách gọi 2 phần
+        o.addOrderDish(od);
+        
+        // 3. Thực thi hàm và kiểm tra
+        boolean result = instance.addOrder(o);
+        
+        // Khẳng định việc lưu Order và OrderDish xuống DB thành công
+        assertTrue(result, "Hàm addOrder phải trả về true khi Transaction thành công");
         // TODO review the generated test code and remove the default call to fail.
         //fail("The test case is a prototype.");
     }
 
     /**
-     * Test of getTableByCode method, of class TableDAO.
+     * Test of getOrderDetail method, of class OrderDAO.
      */
     @Test
-    public void testGetTableByCode() {
-        System.out.println("getTableByCode");
-        TableDAO instance = new TableDAO();
+    public void testGetOrderDetail() {
+        System.out.println("getOrderDetail");
+        OrderDAO instance = new OrderDAO();
         
-        // 1. Kịch bản test mã bàn TỒN TẠI (Đổi "T001" thành mã có thật trong DB của bạn)
-        String validTableCode = "T001"; 
-        Table result1 = instance.getTableByCode(validTableCode);
-        assertNotNull(result1, "Phải tìm thấy bàn có mã " + validTableCode);
-        assertEquals(validTableCode, result1.getTableCode(), "Mã bàn trả về phải khớp với mã tìm kiếm");
+        // Kịch bản: Tìm Order của một bàn ĐANG CÓ KHÁCH (isPaid = 0)
+        int tableId = 1; // THAY ĐỔI: ID của bàn chắc chắn đang có Order chưa thanh toán
+        Order result = instance.getOrderDetail(tableId);
         
-        // 2. Kịch bản test mã bàn KHÔNG TỒN TẠI
-        String invalidTableCode = "XXX-999";
-        Table result2 = instance.getTableByCode(invalidTableCode);
-        assertNull(result2, "Bàn không tồn tại thì phải trả về null");
+        // Nếu DB có dữ liệu, result phải khác null
+        if (result != null) {
+            assertEquals(Order.STATUS_UNPAID, result.getStatus(), "Trạng thái đơn phải là Chưa thanh toán");
+            assertNotNull(result.getOrderDishes(), "Danh sách món ăn không được null");
+            assertTrue(result.getOrderDishes().size() > 0, "Phải có ít nhất 1 món ăn trong Order");
+        } else {
+            // Nếu bàn đang trống, result sẽ là null
+            assertNull(result, "Nếu bàn chưa gọi món, kết quả trả về phải là null");
+        }
+        // TODO review the generated test code and remove the default call to fail.
+        //fail("The test case is a prototype.");
+    }
+
+    /**
+     * Test of getAllUnpaidOrders method, of class OrderDAO.
+     */
+    @Test
+    public void testGetAllUnpaidOrders() {
+        System.out.println("getAllUnpaidOrders");
+        OrderDAO instance = new OrderDAO();
+        ArrayList<Order> result = instance.getAllUnpaidOrders();
+        
+        // Khẳng định list trả về không bị lỗi (không null)
+        assertNotNull(result, "Danh sách Order chưa thanh toán không được null");
+        
+        // Nếu list có phần tử, kiểm tra phần tử đầu tiên xem có đúng trạng thái không
+        if (!result.isEmpty()) {
+            assertEquals(Order.STATUS_UNPAID, result.get(0).getStatus(), "Order lấy lên phải có trạng thái Chưa thanh toán");
+        }
+        // TODO review the generated test code and remove the default call to fail.
+        //fail("The test case is a prototype.");
+    }
+
+    /**
+     * Test of updateOrderStatus method, of class OrderDAO.
+     */
+    @Test
+    public void testUpdateOrderStatus() {
+        System.out.println("updateOrderStatus");
+        OrderDAO instance = new OrderDAO();
+        
+        // Kịch bản: Đổi trạng thái một Order thành Đã thanh toán
+        int orderId = 1; // THAY ĐỔI: ID của một Order (tblOrder) CÓ THẬT trong DB
+        
+        boolean result = instance.updateOrderStatus(orderId);
+        
+        // Khẳng định hàm Update chạy thành công
+        assertTrue(result, "Hàm updateOrderStatus phải trả về true khi cập nhật thành công");
         // TODO review the generated test code and remove the default call to fail.
         //fail("The test case is a prototype.");
     }
