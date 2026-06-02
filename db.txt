@@ -120,6 +120,7 @@ LEFT JOIN tblOrderDish od ON od.tblDishID = d.ID
 GROUP BY
     d.ID, d.dishCode, d.category, d.name, d.price;
 GO
+
 -- =============================================
 -- 4. INSERT DỮ LIỆU MẪU (DUMMY DATA)
 -- =============================================
@@ -188,4 +189,51 @@ VALUES
 ('TM01', N'Tráng miệng', N'Chè hạt sen nhãn lồng', 35000),
 ('TM02', N'Tráng miệng', N'Kem tươi Vanilla', 30000),
 ('TM03', N'Tráng miệng', N'Trái cây theo mùa', 60000);
+
+-- =============================================
+-- 5. DỮ LIỆU MẪU CHO LUỒNG THANH TOÁN
+-- =============================================
+
+-- Thêm Order mẫu cho các bàn đang phục vụ (T003=ID3, T007=ID7, T011=ID11)
+INSERT INTO tblOrder (orderTime, isPaid, tblUserID, tblTableID) VALUES
+(DATEADD(HOUR, -2, GETDATE()), 0, 1, 3),   -- Bàn VIP 1 (T003) - nhân viên 1
+(DATEADD(HOUR, -1, GETDATE()), 0, 2, 7),   -- Bàn số 7 (T007) - nhân viên 2
+(DATEADD(MINUTE, -45, GETDATE()), 0, 1, 11); -- Bàn VIP 3 (T011) - nhân viên 1
+
+-- Thêm chi tiết món đã gọi cho từng Order
+-- Order 1 (Bàn VIP 1 - T003): tblOrderID sẽ là 1
+INSERT INTO tblOrderDish (quantity, currentPrice, tblOrderID, tblDishID)
+SELECT 2, d.price, o.id, d.id FROM tblOrder o, tblDish d
+WHERE o.tblTableID = 3 AND o.isPaid = 0 AND d.dishCode = 'MC01'; -- Bò lúc lắc x2
+
+INSERT INTO tblOrderDish (quantity, currentPrice, tblOrderID, tblDishID)
+SELECT 1, d.price, o.id, d.id FROM tblOrder o, tblDish d
+WHERE o.tblTableID = 3 AND o.isPaid = 0 AND d.dishCode = 'DU01'; -- Nước ép cam x1
+
+INSERT INTO tblOrderDish (quantity, currentPrice, tblOrderID, tblDishID)
+SELECT 1, d.price, o.id, d.id FROM tblOrder o, tblDish d
+WHERE o.tblTableID = 3 AND o.isPaid = 0 AND d.dishCode = 'TM01'; -- Chè hạt sen x1
+
+-- Order 2 (Bàn số 7 - T007)
+INSERT INTO tblOrderDish (quantity, currentPrice, tblOrderID, tblDishID)
+SELECT 3, d.price, o.id, d.id FROM tblOrder o, tblDish d
+WHERE o.tblTableID = 7 AND o.isPaid = 0 AND d.dishCode = 'MC04'; -- Lẩu Thái x3
+
+INSERT INTO tblOrderDish (quantity, currentPrice, tblOrderID, tblDishID)
+SELECT 4, d.price, o.id, d.id FROM tblOrder o, tblDish d
+WHERE o.tblTableID = 7 AND o.isPaid = 0 AND d.dishCode = 'DU03'; -- Bia Heineken x4
+
+-- Order 3 (Bàn VIP 3 - T011)
+INSERT INTO tblOrderDish (quantity, currentPrice, tblOrderID, tblDishID)
+SELECT 2, d.price, o.id, d.id FROM tblOrder o, tblDish d
+WHERE o.tblTableID = 11 AND o.isPaid = 0 AND d.dishCode = 'MC03'; -- Gà nướng x2
+
+INSERT INTO tblOrderDish (quantity, currentPrice, tblOrderID, tblDishID)
+SELECT 2, d.price, o.id, d.id FROM tblOrder o, tblDish d
+WHERE o.tblTableID = 11 AND o.isPaid = 0 AND d.dishCode = 'KV01'; -- Salad cá hồi x2
+
+INSERT INTO tblOrderDish (quantity, currentPrice, tblOrderID, tblDishID)
+SELECT 5, d.price, o.id, d.id FROM tblOrder o, tblDish d
+WHERE o.tblTableID = 11 AND o.isPaid = 0 AND d.dishCode = 'DU04'; -- Nước suối x5
+
 
